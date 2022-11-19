@@ -91,7 +91,15 @@ void readInstructions(char* filename) {
 
     while(fgets(instruction, MAX_INSTRUCTION_LEN, f)) {
 
-        if(strncmp(instruction, "\n", 2)) printBinary(assembleInstruction(instruction), 32);
+        if(strncmp(instruction, "\n", 2)) {
+            
+            int lineBreakIndex = strnlen(instruction, MAX_INSTRUCTION_LEN) - 1;
+            if(instruction[lineBreakIndex] == '\n') instruction[lineBreakIndex] = '\0';
+
+            printBinary(assembleInstruction(instruction), 32);
+
+        }
+
         line++;
 
     }

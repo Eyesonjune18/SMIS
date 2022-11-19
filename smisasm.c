@@ -8,6 +8,7 @@
 #define MAX_INSTRUCTION_LEN 50
 #define MAX_STRING_LEN 500
 #define IMMEDIATE_MAX_VAL 65535
+// 16-bit unsigned int limit
 
 #define OP_SET 1
 #define OP_COPY 2
@@ -46,15 +47,15 @@
 
 
 int line = 1;
+// Line number is stored in order to give more descriptive error messages
 
 
 void readInstructions(char* filename);
 unsigned int assembleInstruction(char* instruction);
 
-unsigned int aType(char* instruction);
-unsigned int aType_c(char* instruction);
-unsigned int iType(char* instruction);
-unsigned int mType(char* instruction);
+unsigned int AType(char* instruction);
+unsigned int IType(char* instruction);
+unsigned int SType(char* instruction);
 
 unsigned int getRegisterNum(char* str);
 unsigned int getImmediateVal(char* str);
@@ -84,9 +85,9 @@ int main(int argc, char** argv) {
 void readInstructions(char* filename) {
     // Reads all instructions from the given file and interprets them
 
-    FILE* f;
+    FILE* asmFile;
 
-    if(!(f = fopen(filename, "r"))) {
+    if(!(asmFile = fopen(filename, "r"))) {
 
         printf("File %s does not exist.\n", filename);
         printf(USAGE);
@@ -96,7 +97,7 @@ void readInstructions(char* filename) {
 
     char* instruction = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
 
-    while(fgets(instruction, MAX_INSTRUCTION_LEN, f)) {
+    while(fgets(instruction, MAX_INSTRUCTION_LEN, asmFile)) {
 
         bool skipLine = false;
 
@@ -126,14 +127,15 @@ unsigned int assembleInstruction(char* instruction) {
 
     unsigned int instructionNum = 0;
 
-    if((instructionNum = aType(instruction))) return instructionNum;
-    else if((instructionNum = iType(instruction))) return instructionNum;
+    if((instructionNum = AType(instruction))) return instructionNum;
+    else if((instructionNum = IType(instruction))) return instructionNum;
+    else if((instructionNum = SType(instruction))) return instructionNum;
 
     return 0;
 
 }
 
-unsigned int aType(char* instruction) {
+unsigned int AType(char* instruction) {
     // Assembles all basic A-type (arithmetic) instructions, excluding COPY, COMPARE, and NOT
     // Returns 0 if the given string is not a valid A-type instruction
 
@@ -192,8 +194,8 @@ unsigned int aType(char* instruction) {
 
 }
 
-unsigned int iType(char* instruction) {
-    // Assembles all basic I-type (immediate) instructions, excluding COMPARE-IMM
+unsigned int IType(char* instruction) {
+    // Assembles all basic I-type (immediate) instructions, excluding SET and COMPARE-IMM
     // Returns 0 if the given string is not a valid I-type instruction
 
     unsigned int instructionNum = 0;
@@ -201,19 +203,21 @@ unsigned int iType(char* instruction) {
     char* opcodeStr = getFirstWord(instruction);
     unsigned int opcodeNum;
 
-    if(!strncmp(opcodeStr, "ADD-IMM", 4)) opcodeNum = OP_ADD_IMM;
-    else if(!strncmp(opcodeStr, "SUBTRACT-IMM", 9)) opcodeNum = OP_SUBTRACT_IMM;
-    else if(!strncmp(opcodeStr, "MULTIPLY-IMM", 9)) opcodeNum = OP_MULTIPLY_IMM;
-    else if(!strncmp(opcodeStr, "DIVIDE-IMM", 7)) opcodeNum = OP_DIVIDE_IMM;
+    if(!strncmp(opcodeStr, "ADD-IMM", 8)) opcodeNum = OP_ADD_IMM;
+    else if(!strncmp(opcodeStr, "SUBTRACT-IMM", 13)) opcodeNum = OP_SUBTRACT_IMM;
+    else if(!strncmp(opcodeStr, "MULTIPLY-IMM", 13)) opcodeNum = OP_MULTIPLY_IMM;
+    else if(!strncmp(opcodeStr, "DIVIDE-IMM", 11)) opcodeNum = OP_DIVIDE_IMM;
 
-    else if(!strncmp(opcodeStr, "SHIFT-LEFT-IMM", 11)) opcodeNum = OP_SHIFT_LEFT_IMM;
-    else if(!strncmp(opcodeStr, "SHIFT-RIGHT-IMM", 12)) opcodeNum = OP_SHIFT_RIGHT_IMM;
+    else if(!strncmp(opcodeStr, "SHIFT-LEFT-IMM", 15)) opcodeNum = OP_SHIFT_LEFT_IMM;
+    else if(!strncmp(opcodeStr, "SHIFT-RIGHT-IMM", 16)) opcodeNum = OP_SHIFT_RIGHT_IMM;
 
-    else if(!strncmp(opcodeStr, "AND-IMM", 4)) opcodeNum = OP_AND_IMM;
-    else if(!strncmp(opcodeStr, "OR-IMM", 3)) opcodeNum = OP_OR_IMM;
-    else if(!strncmp(opcodeStr, "XOR-IMM", 4)) opcodeNum = OP_XOR_IMM;
-    else if(!strncmp(opcodeStr, "NAND-IMM", 5)) opcodeNum = OP_NAND_IMM;
-    else if(!strncmp(opcodeStr, "NOR-IMM", 4)) opcodeNum = OP_NOR_IMM;
+    else if(!strncmp(opcodeStr, "AND-IMM", 8)) opcodeNum = OP_AND_IMM;
+    else if(!strncmp(opcodeStr, "OR-IMM", 7)) opcodeNum = OP_OR_IMM;
+    else if(!strncmp(opcodeStr, "XOR-IMM", 8)) opcodeNum = OP_XOR_IMM;
+    else if(!strncmp(opcodeStr, "NAND-IMM", 9)) opcodeNum = OP_NAND_IMM;
+    else if(!strncmp(opcodeStr, "NOR-IMM", 8)) opcodeNum = OP_NOR_IMM;
+    else if(!strncmp(opcodeStr, "LOAD", 5)) opcodeNum = OP_LOAD;
+    else if(!strncmp(opcodeStr, "STORE", 6)) opcodeNum = OP_STORE;
 
     else return 0;
 
@@ -227,7 +231,7 @@ unsigned int iType(char* instruction) {
 
     }
 
-    for(int arg = 1; arg <= 2; arg++) {
+    for(int arg = 1; arg <= 3; arg++) {
         
         if((arg != 3 && !fitsRegisterSyntax(getWord(instruction, arg)))
             || (arg == 3 && !fitsImmediateSyntax(getWord(instruction, arg)))) {
@@ -247,6 +251,64 @@ unsigned int iType(char* instruction) {
     instructionNum += rDest << 20;
     instructionNum += rOp1 << 16;
     instructionNum += iOp2;
+
+    return instructionNum;
+
+}
+
+unsigned int SType(char* instruction) {
+    // Assembles all non-standard instructions
+    // Returns 0 if the given string is not a valid special instruction
+
+    unsigned int instructionNum = 0;
+
+    char* opcodeStr = getFirstWord(instruction);
+    unsigned int opcodeNum;
+
+    bool immediateMode = false;
+    bool compareMode = false;
+    bool notMode = false;
+    
+    if(!strncmp(opcodeStr, "SET", 4)) { opcodeNum = OP_SET; immediateMode = true; }
+    else if(!strncmp(opcodeStr, "COPY", 5)) opcodeNum = OP_COPY;
+    else if(!strncmp(opcodeStr, "COMPARE", 8)) { opcodeNum = OP_COMPARE; compareMode = true; }
+    else if(!strncmp(opcodeStr, "COMPARE-IMM", 12)) { opcodeNum = OP_COMPARE_IMM; immediateMode = true; compareMode = true;}
+    else if(!strncmp(opcodeStr, "NOT", 4)) { opcodeNum = OP_NOT; notMode = true; }
+
+    else return 0;
+
+    instructionNum += opcodeNum << 24;
+
+    if(countWords(instruction) != 3) {
+
+        printf("Incorrect number of arguments at line %i\n", line);
+        printf("Instruction: %s\n", instruction);
+        exit(-1);
+
+    }
+
+    for(int arg = 1; arg <= 2; arg++) {
+        
+        if((arg == 1 && !fitsRegisterSyntax(getWord(instruction, arg)))
+            || (arg == 2 && !immediateMode && !fitsRegisterSyntax(getWord(instruction, arg)))
+            || (arg == 2 && immediateMode && !fitsImmediateSyntax(getWord(instruction, arg)))) {
+
+            printf("Wrong format of argument %i at line %i\n", arg, line);
+            printf("Instruction: %s\n", instruction);
+            exit(-1);
+
+        }
+
+    }
+
+    unsigned int reg = getRegisterNum(getWord(instruction, 1));
+    unsigned int op = immediateMode ? getImmediateVal(getWord(instruction, 2)) : getRegisterNum(getWord(instruction, 2));
+
+    if(compareMode) instructionNum += reg << 16;
+    else instructionNum += reg << 20;
+    if(immediateMode) instructionNum += op;
+    else if(notMode) instructionNum += op << 16;
+    else instructionNum += op << 12;
 
     return instructionNum;
 

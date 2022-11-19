@@ -95,6 +95,7 @@ void readInstructions(char* filename) {
             
             int lineBreakIndex = strnlen(instruction, MAX_INSTRUCTION_LEN) - 1;
             if(instruction[lineBreakIndex] == '\n') instruction[lineBreakIndex] = '\0';
+            // Remove any trailing line breaks from the instruction
 
             printBinary(assembleInstruction(instruction), 32);
 
@@ -109,13 +110,15 @@ void readInstructions(char* filename) {
 }
 
 unsigned int assembleInstruction(char* instruction) {
-    // Returns an int representing the numeric representation of the given instruction
+    // Assembles all instruction types into their respective numeric values
 
     return aType(instruction);
 
 }
 
 unsigned int aType(char* instruction) {
+    // Assembles all basic A-type (arithmetic) instructions, excluding COPY and COMPARE
+    // Returns 0 if the given string is not a valid A-type instruction
 
     unsigned int instructionNum = 0;
 
@@ -173,18 +176,23 @@ unsigned int aType(char* instruction) {
 }
 
 unsigned int getRegisterNum(char* str) {
+    // Gets the register address from a given string
+    // Assumes that string has already been validated as a proper register address argument
 
     return strtol(str + 1, NULL, 10);
 
 }
 
 unsigned int getImmediateVal(char* str) {
+    // Gets the immediate value from a given string
+    // Assumes that string has already been validated as a proper immediate argument
 
     return strtol(str + 1, NULL, 10);
 
 }
 
 bool fitsRegisterSyntax(char* str) {
+    // Checks if a given string fits the SMIS register standard syntax "R<4-bit unsigned register address>"
 
     if(*str != 'R') return false;
 
@@ -198,6 +206,7 @@ bool fitsRegisterSyntax(char* str) {
 }
 
 bool fitsImmediateSyntax(char* str) {
+    // Checks if a given string fits the SMIS immediate standard syntax "#<16-bit unsigned int>"
 
     if(*str != '#') return false;
 
@@ -211,6 +220,7 @@ bool fitsImmediateSyntax(char* str) {
 }
 
 bool containsOnlyNums(char* str) {
+    // Checks if a given string contains only numerical digit characters
 
     while(*str) {
 
@@ -224,6 +234,7 @@ bool containsOnlyNums(char* str) {
 }
 
 int countWords(char* str) {
+    // Counts the number of space-separated words in a given string
 
     // TODO: Make this safer
 
@@ -269,6 +280,7 @@ char* getFirstWord(char* str) {
 }
 
 char* getWord(char* str, int w) {
+    // Gets an indexed word from a given string
 
     if(w >= countWords(str)) {
 

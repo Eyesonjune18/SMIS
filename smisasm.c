@@ -25,17 +25,24 @@
 #define OP_COMPARE_IMM 12
 
 #define OP_SHIFT_LEFT 13
-#define OP_SHIFT_RIGHT 14
+#define OP_SHIFT_LEFT_IMM 14
+#define OP_SHIFT_RIGHT 15
+#define OP_SHIFT_RIGHT_IMM 16
 
-#define OP_AND 15
-#define OP_OR 16
-#define OP_XOR 17
-#define OP_NAND 18
-#define OP_NOR 19
-#define OP_NOT 20
+#define OP_AND 17
+#define OP_AND_IMM 18
+#define OP_OR 19
+#define OP_OR_IMM 20
+#define OP_XOR 21
+#define OP_XOR_IMM 22
+#define OP_NAND 23
+#define OP_NAND_IMM 24
+#define OP_NOR 25
+#define OP_NOR_IMM 26
+#define OP_NOT 27
 
-#define OP_LOAD 21
-#define OP_STORE 22
+#define OP_LOAD 28
+#define OP_STORE 29
 
 
 int line = 1;
@@ -45,9 +52,9 @@ void readInstructions(char* filename);
 unsigned int assembleInstruction(char* instruction);
 
 unsigned int aType(char* instruction);
-int aType_c(char* instruction);
-int mType(char* instruction);
-int iType(char* instruction);
+unsigned int aType_c(char* instruction);
+unsigned int iType(char* instruction);
+unsigned int mType(char* instruction);
 
 unsigned int getRegisterNum(char* str);
 unsigned int getImmediateVal(char* str);
@@ -91,7 +98,12 @@ void readInstructions(char* filename) {
 
     while(fgets(instruction, MAX_INSTRUCTION_LEN, f)) {
 
-        if(strncmp(instruction, "\n", 2)) {
+        bool skipLine = false;
+
+        if(!strncmp(instruction, "\n", 2) || !strncmp(instruction, "//", 2)) skipLine = true;
+        // Skip line breaks and comments
+
+        if(!skipLine) {
             
             int lineBreakIndex = strnlen(instruction, MAX_INSTRUCTION_LEN) - 1;
             if(instruction[lineBreakIndex] == '\n') instruction[lineBreakIndex] = '\0';
@@ -112,12 +124,17 @@ void readInstructions(char* filename) {
 unsigned int assembleInstruction(char* instruction) {
     // Assembles all instruction types into their respective numeric values
 
-    return aType(instruction);
+    unsigned int instructionNum = 0;
+
+    if((instructionNum = aType(instruction))) return instructionNum;
+    else if((instructionNum = iType(instruction))) return instructionNum;
+
+    return 0;
 
 }
 
 unsigned int aType(char* instruction) {
-    // Assembles all basic A-type (arithmetic) instructions, excluding COPY and COMPARE
+    // Assembles all basic A-type (arithmetic) instructions, excluding COPY, COMPARE, and NOT
     // Returns 0 if the given string is not a valid A-type instruction
 
     unsigned int instructionNum = 0;
@@ -129,6 +146,7 @@ unsigned int aType(char* instruction) {
     else if(!strncmp(opcodeStr, "SUBTRACT", 9)) opcodeNum = OP_SUBTRACT;
     else if(!strncmp(opcodeStr, "MULTIPLY", 9)) opcodeNum = OP_MULTIPLY;
     else if(!strncmp(opcodeStr, "DIVIDE", 7)) opcodeNum = OP_DIVIDE;
+
     else if(!strncmp(opcodeStr, "SHIFT-LEFT", 11)) opcodeNum = OP_SHIFT_LEFT;
     else if(!strncmp(opcodeStr, "SHIFT-RIGHT", 12)) opcodeNum = OP_SHIFT_RIGHT;
 
@@ -137,7 +155,6 @@ unsigned int aType(char* instruction) {
     else if(!strncmp(opcodeStr, "XOR", 4)) opcodeNum = OP_XOR;
     else if(!strncmp(opcodeStr, "NAND", 5)) opcodeNum = OP_NAND;
     else if(!strncmp(opcodeStr, "NOR", 4)) opcodeNum = OP_NOR;
-    else if(!strncmp(opcodeStr, "NOT", 4)) opcodeNum = OP_NOT;
 
     else return 0;
 
@@ -170,6 +187,66 @@ unsigned int aType(char* instruction) {
     instructionNum += rDest << 20;
     instructionNum += rOp1 << 16;
     instructionNum += rOp2 << 12;
+
+    return instructionNum;
+
+}
+
+unsigned int iType(char* instruction) {
+    // Assembles all basic I-type (immediate) instructions, excluding COMPARE-IMM
+    // Returns 0 if the given string is not a valid I-type instruction
+
+    unsigned int instructionNum = 0;
+
+    char* opcodeStr = getFirstWord(instruction);
+    unsigned int opcodeNum;
+
+    if(!strncmp(opcodeStr, "ADD-IMM", 4)) opcodeNum = OP_ADD_IMM;
+    else if(!strncmp(opcodeStr, "SUBTRACT-IMM", 9)) opcodeNum = OP_SUBTRACT_IMM;
+    else if(!strncmp(opcodeStr, "MULTIPLY-IMM", 9)) opcodeNum = OP_MULTIPLY_IMM;
+    else if(!strncmp(opcodeStr, "DIVIDE-IMM", 7)) opcodeNum = OP_DIVIDE_IMM;
+
+    else if(!strncmp(opcodeStr, "SHIFT-LEFT-IMM", 11)) opcodeNum = OP_SHIFT_LEFT_IMM;
+    else if(!strncmp(opcodeStr, "SHIFT-RIGHT-IMM", 12)) opcodeNum = OP_SHIFT_RIGHT_IMM;
+
+    else if(!strncmp(opcodeStr, "AND-IMM", 4)) opcodeNum = OP_AND_IMM;
+    else if(!strncmp(opcodeStr, "OR-IMM", 3)) opcodeNum = OP_OR_IMM;
+    else if(!strncmp(opcodeStr, "XOR-IMM", 4)) opcodeNum = OP_XOR_IMM;
+    else if(!strncmp(opcodeStr, "NAND-IMM", 5)) opcodeNum = OP_NAND_IMM;
+    else if(!strncmp(opcodeStr, "NOR-IMM", 4)) opcodeNum = OP_NOR_IMM;
+
+    else return 0;
+
+    instructionNum += opcodeNum << 24;
+
+    if(countWords(instruction) != 4) {
+
+        printf("Incorrect number of arguments at line %i\n", line);
+        printf("Instruction: %s\n", instruction);
+        exit(-1);
+
+    }
+
+    for(int arg = 1; arg <= 2; arg++) {
+        
+        if((arg != 3 && !fitsRegisterSyntax(getWord(instruction, arg)))
+            || (arg == 3 && !fitsImmediateSyntax(getWord(instruction, arg)))) {
+
+            printf("Wrong format of argument %i at line %i\n", arg, line);
+            printf("Instruction: %s\n", instruction);
+            exit(-1);
+
+        }
+
+    }
+
+    unsigned int rDest = getRegisterNum(getWord(instruction, 1));
+    unsigned int rOp1 = getRegisterNum(getWord(instruction, 2));
+    unsigned int iOp2 = getImmediateVal(getWord(instruction, 3));
+
+    instructionNum += rDest << 20;
+    instructionNum += rOp1 << 16;
+    instructionNum += iOp2;
 
     return instructionNum;
 

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 
-#define USAGE "Usage: ./smisasm <ASM file>\n"
+#define USAGE "Usage: ./smisasm <ASM file> <output BIN file>\n"
 #define MAX_INSTRUCTION_LEN 50
 #define MAX_STRING_LEN 500
 #define IMMEDIATE_MAX_VAL 65535
@@ -50,7 +50,7 @@ int line = 1;
 // Line number is stored in order to give more descriptive error messages
 
 
-void readInstructions(char* filename);
+void readInstructions(char* readfile, char* writefile);
 unsigned int assembleInstruction(char* instruction);
 
 unsigned int AType(char* instruction);
@@ -72,25 +72,34 @@ unsigned char binaryChar(unsigned int n);
 
 int main(int argc, char** argv) {
 
-    if(argc != 2) {
+    if(argc != 3) {
 
         printf(USAGE);
         exit(-1);
 
     }
 
-    readInstructions(argv[1]);
+    readInstructions(argv[1], argv[2]);
 
 }
 
-void readInstructions(char* filename) {
+void readInstructions(char* readfile, char* writefile) {
     // Reads all instructions from the given file and interprets them
 
     FILE* asmFile;
+    FILE* binFile;
 
-    if(!(asmFile = fopen(filename, "r"))) {
+    if(!(asmFile = fopen(readfile, "r"))) {
 
-        printf("File %s does not exist.\n", filename);
+        printf("File %s does not exist.\n", readfile);
+        printf(USAGE);
+        exit(-1);
+
+    }
+
+    if(!(binFile = fopen(writefile, "wb"))) {
+
+        printf("Cannot output to file %s.\n", writefile);
         printf(USAGE);
         exit(-1);
 
@@ -111,13 +120,22 @@ void readInstructions(char* filename) {
             if(instruction[lineBreakIndex] == '\n') instruction[lineBreakIndex] = '\0';
             // Remove any trailing line breaks from the instruction
 
-            printf("Instruction at line %i: %s\n", line, getBinary(assembleInstruction(instruction), 32));
+            unsigned int buffer = assembleInstruction(instruction);
+            unsigned char* instructionToPrint = getBinary(buffer, 32);
+
+            // printf("%s\n", instructionToPrint);
+            printf("%.8X\n", buffer);
+
+            fwrite(&buffer, sizeof(unsigned int), 1, binFile);
 
         }
 
         line++;
 
     }
+
+    fclose(asmFile);
+    fclose(binFile);
 
     free(instruction);
 

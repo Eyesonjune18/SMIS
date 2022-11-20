@@ -121,7 +121,7 @@ void readInstructions(char* readfile, char* writefile) {
             // Remove any trailing line breaks from the instruction
 
             unsigned int buffer = assembleInstruction(instruction);
-            unsigned char* instructionToPrint = getBinary(buffer, 32);
+            // unsigned char* instructionToPrint = getBinary(buffer, 32);
 
             // printf("%s\n", instructionToPrint);
             printf("%.8X\n", buffer);
@@ -236,7 +236,11 @@ unsigned int IType(char* instruction) {
     else if(!strncmp(opcodeStr, "NAND-IMM", 9)) opcodeNum = OP_NAND_IMM;
     else if(!strncmp(opcodeStr, "NOR-IMM", 8)) opcodeNum = OP_NOR_IMM;
     else if(!strncmp(opcodeStr, "LOAD", 5)) opcodeNum = OP_LOAD;
-    else if(!strncmp(opcodeStr, "STORE", 6)) opcodeNum = OP_STORE;
+    else if(!strncmp(opcodeStr, "STORE", 6)) {
+        
+        opcodeNum = OP_STORE;
+
+    }
 
     else return 0;
 
@@ -356,8 +360,8 @@ bool fitsRegisterSyntax(char* str) {
 
     if(!containsOnlyNums(str + 1)) return false;
 
-    int regNum;
-    if(!(regNum = strtol(str + 1, NULL, 10)) || regNum > 15) return false;
+    unsigned int regNum = strtol(str + 1, NULL, 10);
+    if(regNum > 15) return false;
 
     return true;
 
@@ -370,8 +374,8 @@ bool fitsImmediateSyntax(char* str) {
 
     if(!containsOnlyNums(str + 1)) return false;
 
-    unsigned int immVal;
-    if(!(immVal = strtol(str + 1, NULL, 10)) || immVal > IMMEDIATE_MAX_VAL) return false;
+    unsigned int immVal = strtol(str + 1, NULL, 10);
+    if(immVal > IMMEDIATE_MAX_VAL) return false;
 
     return true;
 
@@ -394,7 +398,7 @@ bool containsOnlyNums(char* str) {
 int countWords(char* str) {
     // Counts the number of space-separated words in a given string
 
-    // TODO: Make this safer
+    // TODO: Make this function safer
 
     int count = 0;
 
@@ -469,6 +473,7 @@ unsigned char* getBinary(unsigned int n, int length) {
 }
 
 unsigned char binaryChar(unsigned int n) {
+    // Converts a 0 or 1 into '0' or '1' respectively
 
     if(n == 0) return '0';
     else if(n == 1) return '1';

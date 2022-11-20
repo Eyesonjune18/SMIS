@@ -66,7 +66,8 @@ bool containsOnlyNums(char* str);
 int countWords(char* str);
 char* getFirstWord(char* str);
 char* getWord(char* str, int w);
-void printBinary(unsigned int n, int length);
+unsigned char* getBinary(unsigned int n, int length);
+unsigned char binaryChar(unsigned int n);
 
 
 int main(int argc, char** argv) {
@@ -110,7 +111,7 @@ void readInstructions(char* filename) {
             if(instruction[lineBreakIndex] == '\n') instruction[lineBreakIndex] = '\0';
             // Remove any trailing line breaks from the instruction
 
-            printBinary(assembleInstruction(instruction), 32);
+            printf("Instruction at line %i: %s\n", line, getBinary(assembleInstruction(instruction), 32));
 
         }
 
@@ -438,10 +439,26 @@ char* getWord(char* str, int w) {
 
 }
 
-void printBinary(unsigned int n, int length) {
-    // Prints a given int in binary format
+unsigned char* getBinary(unsigned int n, int length) {
+    // Returns a given int in binary format
 
-    for(int i = length - 1; i >= 0; i--) printf("%i", (n & 1 << i) >> i);
-    printf("\n");
+    unsigned char* binary = malloc(n * sizeof(unsigned char));
+
+    for(int i = 0; i < length; i++) binary[length - (i + 1)] = binaryChar((n & 1 << i) >> i);
+
+    return binary;
+
+}
+
+unsigned char binaryChar(unsigned int n) {
+
+    if(n == 0) return '0';
+    else if(n == 1) return '1';
+    else {
+
+        printf("Internal error: cannot get binary char equivalent for digit %i\n", n);
+        exit(-2);
+
+    }
 
 }

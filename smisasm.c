@@ -1,3 +1,5 @@
+// TODO: (Global) look for integer overflows?
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
@@ -44,11 +46,13 @@
 #define OP_LOAD 28
 #define OP_STORE 29
 
+#define OP_JUMP 30
+
 
 typedef struct Label {
 
     char* labelName;
-    unsigned int PCAddress;
+    unsigned short int PCAddress;
 
 } Label;
 
@@ -58,9 +62,9 @@ Label* SYMBOL_TABLE;
 unsigned int SYMBOL_COUNT = 0;
 // Stores the amount of symbols to avoid iterating over unallocated pointers
 
-int INSTRUCTION_ADDR = 0;
+unsigned short int INSTRUCTION_ADDR = 0;
 // Instruction address is stored for symbol table usage
-int LINE_NUMBER = 1;
+unsigned int LINE_NUMBER = 1;
 // Line number is stored in order to give more descriptive error messages
 
 
@@ -70,8 +74,10 @@ unsigned int assembleInstruction(char* instruction);
 
 unsigned int AType(char* instruction);
 unsigned int IType(char* instruction);
+unsigned int JType(char* instruction);
 unsigned int SType(char* instruction);
 
+unsigned short int getLabelAddr(char* lbl);
 unsigned int getRegisterNum(char* str);
 unsigned int getImmediateVal(char* str);
 bool fitsRegisterSyntax(char* str);
@@ -88,7 +94,6 @@ bool isLabel(char* str);
 void trimLineBreak(char* str);
 void trimLabelColon(char* str);
 void trimChar(char* str, char c);
-
 
 int main(int argc, char** argv) {
 
@@ -189,7 +194,6 @@ void readInstructions(char* readfile, char* writefile) {
             // Remove any trailing line breaks from the instruction
 
             unsigned int buffer = assembleInstruction(instruction);
-            // unsigned char* instructionToPrint = getBinary(buffer, 32);
 
             printf("%.8X\n", buffer);
 
@@ -214,6 +218,7 @@ unsigned int assembleInstruction(char* instruction) {
 
     if((instructionNum = AType(instruction))) return instructionNum;
     else if((instructionNum = IType(instruction))) return instructionNum;
+    else if((instructionNum = JType(instruction))) return instructionNum;
     else if((instructionNum = SType(instruction))) return instructionNum;
 
     else {
@@ -224,6 +229,22 @@ unsigned int assembleInstruction(char* instruction) {
         exit(-1);
 
     }
+
+}
+
+unsigned short int getLabelAddr(char* lbl) {
+    // Reads the symbol table and finds a corresponding label address, terminating the program if none is found
+
+    for(int i = 0; i < SYMBOL_COUNT; i++) {
+
+        Label l = SYMBOL_TABLE[i];
+
+        if(!strncmp(l.labelName, lbl, MAX_INSTRUCTION_LEN)) return l.PCAddress;
+
+    }
+
+    printf("Cannot use label %s at line %i because it does not exist in the symbol table\n", lbl, LINE_NUMBER);
+    exit(-1);
 
 }
 
@@ -343,6 +364,37 @@ unsigned int IType(char* instruction) {
     instructionNum += rDest << 20;
     instructionNum += rOp1 << 16;
     instructionNum += iOp2;
+
+    return instructionNum;
+
+}
+
+unsigned int JType(char* instruction) {
+    // Assembles all basic J-type (jump) instructions
+    // Returns 0 if the given string is not a valid J-type instruction
+
+    unsigned int instructionNum = 0;
+
+    char* opcodeStr = getFirstWord(instruction);
+    unsigned int opcodeNum;
+
+    if(!strncmp(opcodeStr, "JUMP", 5)) opcodeNum = OP_JUMP;
+
+    else return 0;
+
+    instructionNum += opcodeNum << 24;
+
+    if(countWords(instruction) != 2) {
+
+        printf("Incorrect number of arguments at line %i\n", LINE_NUMBER);
+        printf("Instruction: %s\n", instruction);
+        exit(-1);
+
+    }
+
+    unsigned short int destAddr = getLabelAddr(getWord(instruction, 1));
+
+    instructionNum += destAddr;
 
     return instructionNum;
 

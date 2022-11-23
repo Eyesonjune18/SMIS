@@ -95,6 +95,7 @@ void trimLineBreak(char* str);
 void trimLabelColon(char* str);
 void trimChar(char* str, char c);
 
+
 int main(int argc, char** argv) {
 
     if(argc != 3) {

@@ -53,8 +53,8 @@ typedef struct Label {
 } Label;
 
 
-Label** SYMBOL_TABLE;
-// Stores the addresses of all labels in the assembled file
+Label* SYMBOL_TABLE;
+// Stores all labels in the assembled file
 unsigned int SYMBOL_COUNT = 0;
 // Stores the amount of symbols to avoid iterating over unallocated pointers
 
@@ -99,10 +99,11 @@ int main(int argc, char** argv) {
 
     }
 
-    SYMBOL_TABLE = malloc(INT_LIMIT * sizeof(Label*));
+    SYMBOL_TABLE = NULL;
 
     readLabels(argv[1]);
     readInstructions(argv[1], argv[2]);
+
 
     free(SYMBOL_TABLE);
 
@@ -130,13 +131,15 @@ void readLabels(char* readfile) {
         if(isLabel(line)) {
 
             trimLabelColon(line);
-            line = realloc(line, strnlen(line, MAX_INSTRUCTION_LEN));
 
-            Label* l = malloc(sizeof(Label));
-            l->labelName = line;
-            l->PCAddress = INSTRUCTION_ADDR + 2;
+            Label l;
+            l.labelName = strndup(line, MAX_INSTRUCTION_LEN);
+            l.PCAddress = INSTRUCTION_ADDR + 2;
+
+            SYMBOL_TABLE = realloc(SYMBOL_TABLE, (SYMBOL_COUNT + 1) * sizeof(Label));
 
             SYMBOL_TABLE[SYMBOL_COUNT] = l;
+            
             SYMBOL_COUNT++;
 
         } else INSTRUCTION_ADDR += 2;

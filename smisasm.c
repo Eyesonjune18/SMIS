@@ -383,9 +383,9 @@ unsigned int JType(char* instruction) {
     unsigned int opcodeNum;
 
     if(!strncmp(opcodeStr, "JUMP", 5)) opcodeNum = OP_JUMP;
-    if(!strncmp(opcodeStr, "JUMP-IF-ZERO", 13)) opcodeNum = OP_JUMP_IF_ZERO;
-    if(!strncmp(opcodeStr, "JUMP-IF-NOTZERO", 16)) opcodeNum = OP_JUMP_IF_NOTZERO;
-    if(!strncmp(opcodeStr, "JUMP-LINK", 10)) opcodeNum = OP_JUMP_LINK;
+    else if(!strncmp(opcodeStr, "JUMP-IF-ZERO", 13)) opcodeNum = OP_JUMP_IF_ZERO;
+    else if(!strncmp(opcodeStr, "JUMP-IF-NOTZERO", 16)) opcodeNum = OP_JUMP_IF_NOTZERO;
+    else if(!strncmp(opcodeStr, "JUMP-LINK", 10)) opcodeNum = OP_JUMP_LINK;
 
     else return 0;
 

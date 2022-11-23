@@ -79,7 +79,7 @@ void readLabels(char* readfile);
 void readInstructions(char* readfile, char* writefile);
 unsigned int assembleInstruction(char* instruction);
 
-unsigned int AType(char* instruction);
+unsigned int RType(char* instruction);
 unsigned int IType(char* instruction);
 unsigned int JType(char* instruction);
 unsigned int SType(char* instruction);
@@ -224,7 +224,7 @@ unsigned int assembleInstruction(char* instruction) {
 
     unsigned int instructionNum = 0;
 
-    if((instructionNum = AType(instruction))) return instructionNum;
+    if((instructionNum = RType(instruction))) return instructionNum;
     else if((instructionNum = IType(instruction))) return instructionNum;
     else if((instructionNum = JType(instruction))) return instructionNum;
     else if((instructionNum = SType(instruction))) return instructionNum;
@@ -256,9 +256,9 @@ unsigned short int getLabelAddr(char* lbl) {
 
 }
 
-unsigned int AType(char* instruction) {
-    // Assembles all basic A-type (arithmetic) instructions, excluding COPY, COMPARE, and NOT
-    // Returns 0 if the given string is not a valid A-type instruction
+unsigned int RType(char* instruction) {
+    // Assembles all basic R-type (register) instructions, excluding COPY, COMPARE, and NOT
+    // Returns 0 if the given string is not a valid R-type instruction
 
     unsigned int instructionNum = 0;
 

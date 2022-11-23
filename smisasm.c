@@ -52,6 +52,9 @@
 #define OP_JUMP_IF_NOTZERO 32
 #define OP_JUMP_LINK 33
 
+#define OP_HALT 34
+// TODO: Possibly add exit code to HALT?
+
 
 typedef struct Label {
 
@@ -421,7 +424,8 @@ unsigned int SType(char* instruction) {
     bool compareMode = false;
     bool notMode = false;
     
-    if(!strncmp(opcodeStr, "SET", 4)) { opcodeNum = OP_SET; immediateMode = true; }
+    if(!strncmp(opcodeStr, "HALT", 5)) return OP_HALT << 24;
+    else if(!strncmp(opcodeStr, "SET", 4)) { opcodeNum = OP_SET; immediateMode = true; }
     else if(!strncmp(opcodeStr, "COPY", 5)) opcodeNum = OP_COPY;
     else if(!strncmp(opcodeStr, "COMPARE", 8)) { opcodeNum = OP_COMPARE; compareMode = true; }
     else if(!strncmp(opcodeStr, "COMPARE-IMM", 12)) { opcodeNum = OP_COMPARE_IMM; immediateMode = true; compareMode = true;}

@@ -12,6 +12,8 @@ SET R1 #65535
 
 Test1:
 
+HALT
+
 LOAD R5 R10 #0
 
 JUMP Test1

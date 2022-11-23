@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 
 
 #define USAGE "Usage: ./smisasm <ASM file> <output BIN file>\n"
@@ -197,9 +198,9 @@ void readInstructions(char* readfile, char* writefile) {
             if(instruction[lineBreakIndex] == '\n') instruction[lineBreakIndex] = '\0';
             // Remove any trailing line breaks from the instruction
 
-            unsigned int buffer = assembleInstruction(instruction);
+            unsigned int buffer = htonl(assembleInstruction(instruction));
 
-            printf("%.8X\n", buffer);
+            printf("%.8X\n", ntohl(buffer));
 
             fwrite(&buffer, sizeof(unsigned int), 1, binFile);
 

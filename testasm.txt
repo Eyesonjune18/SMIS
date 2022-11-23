@@ -1,0 +1,19 @@
+// Test program
+
+SET R1 #5
+ADD-IMM R1 R1 #5
+ADD R1 R1 R1
+
+MULTIPLY-IMM R1 R1 #444
+SET R10 #4096
+STORE R1 R10 #0
+
+Test1:
+
+LOAD R5 R10 #0
+
+COMPARE R5 R1
+
+Test2:
+Test3:
+Test4:

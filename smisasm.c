@@ -7,8 +7,7 @@
 #define USAGE "Usage: ./smisasm <ASM file> <output BIN file>\n"
 #define MAX_INSTRUCTION_LEN 50
 #define MAX_STRING_LEN 500
-#define IMMEDIATE_MAX_VAL 65535
-// 16-bit unsigned int limit
+#define INT_LIMIT 65535
 
 #define OP_SET 1
 #define OP_COPY 2
@@ -46,10 +45,26 @@
 #define OP_STORE 29
 
 
-int line = 1;
+typedef struct Label {
+
+    char* labelName;
+    unsigned int PCAddress;
+
+} Label;
+
+
+Label** SYMBOL_TABLE;
+// Stores the addresses of all labels in the assembled file
+unsigned int SYMBOL_COUNT = 0;
+// Stores the amount of symbols to avoid iterating over unallocated pointers
+
+int INSTRUCTION_ADDR = 0;
+// Instruction address is stored for symbol table usage
+int LINE_NUMBER = 1;
 // Line number is stored in order to give more descriptive error messages
 
 
+void readLabels(char* readfile);
 void readInstructions(char* readfile, char* writefile);
 unsigned int assembleInstruction(char* instruction);
 
@@ -66,8 +81,13 @@ bool containsOnlyNums(char* str);
 int countWords(char* str);
 char* getFirstWord(char* str);
 char* getWord(char* str, int w);
-unsigned char* getBinary(unsigned int n, int length);
+char* getBinary(unsigned int n, int length);
 unsigned char binaryChar(unsigned int n);
+bool isBlankLineOrComment(char* str);
+bool isLabel(char* str);
+void trimLineBreak(char* str);
+void trimLabelColon(char* str);
+void trimChar(char* str, char c);
 
 
 int main(int argc, char** argv) {
@@ -79,7 +99,52 @@ int main(int argc, char** argv) {
 
     }
 
+    SYMBOL_TABLE = malloc(INT_LIMIT * sizeof(Label*));
+
+    readLabels(argv[1]);
     readInstructions(argv[1], argv[2]);
+
+    free(SYMBOL_TABLE);
+
+}
+
+void readLabels(char* readfile) {
+    // Reads all jump labels into the symbol table for use in assembling jump instructions
+
+    FILE* asmFile;
+
+    if(!(asmFile = fopen(readfile, "r"))) {
+
+        printf("File %s does not exist.\n", readfile);
+        printf(USAGE);
+        exit(-1);
+
+    }
+
+    char* line = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
+
+    while(fgets(line, MAX_INSTRUCTION_LEN, asmFile)) {
+
+        if(isBlankLineOrComment(line)) continue;
+
+        if(isLabel(line)) {
+
+            trimLabelColon(line);
+            line = realloc(line, strnlen(line, MAX_INSTRUCTION_LEN));
+
+            Label* l = malloc(sizeof(Label));
+            l->labelName = line;
+            l->PCAddress = INSTRUCTION_ADDR + 2;
+
+            SYMBOL_TABLE[SYMBOL_COUNT] = l;
+            SYMBOL_COUNT++;
+
+        } else INSTRUCTION_ADDR += 2;
+
+    }
+
+    fclose(asmFile);
+    free(line);
 
 }
 
@@ -111,7 +176,7 @@ void readInstructions(char* readfile, char* writefile) {
 
         bool skipLine = false;
 
-        if(!strncmp(instruction, "\n", 2) || !strncmp(instruction, "//", 2)) skipLine = true;
+        if(isBlankLineOrComment(instruction) || isLabel(instruction)) skipLine = true;
         // Skip line breaks and comments
 
         if(!skipLine) {
@@ -123,20 +188,18 @@ void readInstructions(char* readfile, char* writefile) {
             unsigned int buffer = assembleInstruction(instruction);
             // unsigned char* instructionToPrint = getBinary(buffer, 32);
 
-            // printf("%s\n", instructionToPrint);
             printf("%.8X\n", buffer);
 
             fwrite(&buffer, sizeof(unsigned int), 1, binFile);
 
         }
 
-        line++;
+        LINE_NUMBER++;
 
     }
 
     fclose(asmFile);
     fclose(binFile);
-
     free(instruction);
 
 }
@@ -150,7 +213,14 @@ unsigned int assembleInstruction(char* instruction) {
     else if((instructionNum = IType(instruction))) return instructionNum;
     else if((instructionNum = SType(instruction))) return instructionNum;
 
-    return 0;
+    else {
+
+        printf("Invalid instruction at line %i\n", LINE_NUMBER);
+        printf("Instruction: %s\n", instruction);
+
+        exit(-1);
+
+    }
 
 }
 
@@ -183,7 +253,7 @@ unsigned int AType(char* instruction) {
 
     if(countWords(instruction) != 4) {
 
-        printf("Incorrect number of arguments at line %i\n", line);
+        printf("Incorrect number of arguments at line %i\n", LINE_NUMBER);
         printf("Instruction: %s\n", instruction);
         exit(-1);
 
@@ -193,7 +263,7 @@ unsigned int AType(char* instruction) {
         
         if(!fitsRegisterSyntax(getWord(instruction, arg))) {
 
-            printf("Wrong format of argument %i at line %i\n", arg, line);
+            printf("Wrong format of argument %i at line %i\n", arg, LINE_NUMBER);
             printf("Instruction: %s\n", instruction);
             exit(-1);
 
@@ -236,11 +306,7 @@ unsigned int IType(char* instruction) {
     else if(!strncmp(opcodeStr, "NAND-IMM", 9)) opcodeNum = OP_NAND_IMM;
     else if(!strncmp(opcodeStr, "NOR-IMM", 8)) opcodeNum = OP_NOR_IMM;
     else if(!strncmp(opcodeStr, "LOAD", 5)) opcodeNum = OP_LOAD;
-    else if(!strncmp(opcodeStr, "STORE", 6)) {
-        
-        opcodeNum = OP_STORE;
-
-    }
+    else if(!strncmp(opcodeStr, "STORE", 6)) opcodeNum = OP_STORE;
 
     else return 0;
 
@@ -248,7 +314,7 @@ unsigned int IType(char* instruction) {
 
     if(countWords(instruction) != 4) {
 
-        printf("Incorrect number of arguments at line %i\n", line);
+        printf("Incorrect number of arguments at line %i\n", LINE_NUMBER);
         printf("Instruction: %s\n", instruction);
         exit(-1);
 
@@ -259,7 +325,7 @@ unsigned int IType(char* instruction) {
         if((arg != 3 && !fitsRegisterSyntax(getWord(instruction, arg)))
             || (arg == 3 && !fitsImmediateSyntax(getWord(instruction, arg)))) {
 
-            printf("Wrong format of argument %i at line %i\n", arg, line);
+            printf("Wrong format of argument %i at line %i\n", arg, LINE_NUMBER);
             printf("Instruction: %s\n", instruction);
             exit(-1);
 
@@ -304,7 +370,7 @@ unsigned int SType(char* instruction) {
 
     if(countWords(instruction) != 3) {
 
-        printf("Incorrect number of arguments at line %i\n", line);
+        printf("Incorrect number of arguments at line %i\n", LINE_NUMBER);
         printf("Instruction: %s\n", instruction);
         exit(-1);
 
@@ -316,7 +382,7 @@ unsigned int SType(char* instruction) {
             || (arg == 2 && !immediateMode && !fitsRegisterSyntax(getWord(instruction, arg)))
             || (arg == 2 && immediateMode && !fitsImmediateSyntax(getWord(instruction, arg)))) {
 
-            printf("Wrong format of argument %i at line %i\n", arg, line);
+            printf("Wrong format of argument %i at line %i\n", arg, LINE_NUMBER);
             printf("Instruction: %s\n", instruction);
             exit(-1);
 
@@ -375,7 +441,7 @@ bool fitsImmediateSyntax(char* str) {
     if(!containsOnlyNums(str + 1)) return false;
 
     unsigned int immVal = strtol(str + 1, NULL, 10);
-    if(immVal > IMMEDIATE_MAX_VAL) return false;
+    if(immVal > INT_LIMIT) return false;
 
     return true;
 
@@ -461,10 +527,10 @@ char* getWord(char* str, int w) {
 
 }
 
-unsigned char* getBinary(unsigned int n, int length) {
+char* getBinary(unsigned int n, int length) {
     // Returns a given int in binary format
 
-    unsigned char* binary = malloc(n * sizeof(unsigned char));
+    char* binary = malloc(n * sizeof(char));
 
     for(int i = 0; i < length; i++) binary[length - (i + 1)] = binaryChar((n & 1 << i) >> i);
 
@@ -481,6 +547,58 @@ unsigned char binaryChar(unsigned int n) {
 
         printf("Internal error: cannot get binary char equivalent for digit %i\n", n);
         exit(-2);
+
+    }
+
+}
+
+bool isBlankLineOrComment(char* str) {
+    // Checks a line of the ASM file to see if it should be skipped
+
+    if(!strncmp(str, "\n", 2) || !strncmp(str, "//", 2)) return true;
+
+    return false;
+
+}
+
+bool isLabel(char* str) {
+    // Checks if a given line ends with a ':', denoting that it is a jump label
+
+    trimLineBreak(str);
+    int len = strnlen(str, MAX_STRING_LEN) - 1;
+
+    return str[len] == ':';
+
+}
+
+void trimLineBreak(char* str) {
+    // Trims a trailing line break from a string
+
+    trimChar(str, '\n');
+
+}
+
+void trimLabelColon(char* str) {
+    // Trims a trailing colon from a string
+
+    trimChar(str, ':');
+
+}
+
+void trimChar(char* str, char c) {
+    // Trims the first instance of a given character from the end of a string
+    // If the string does not contain the character, it remains unchanged
+
+    int len = strnlen(str, MAX_STRING_LEN);
+
+    for(int i = len; i >= 0; i--) {
+        
+        if(str[i] == c) {
+            
+            str[i] = '\0';
+            return;
+
+        }
 
     }
 

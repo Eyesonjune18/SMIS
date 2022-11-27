@@ -18,8 +18,8 @@ Program overview:
     (Pass 2)
         Once the symbol table has been read, the second pass parses all instructions,
         including their operands, into the binary file. Jump instruction labels are checked
-        against the symbol table, and if the label is found, they are assembled into the
-        label address. If a label does not exist, the file cannot be assembled.
+        against the symbol table, and if the label is found, they are assembled into their
+        corresponding label address. If a label does not exist, the file cannot be assembled.
 
 */
 

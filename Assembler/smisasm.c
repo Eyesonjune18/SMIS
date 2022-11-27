@@ -32,7 +32,7 @@ Program overview:
 #include <arpa/inet.h>
 
 
-#define USAGE "Usage: ./smisasm <ASM .txt file> <output .bin file>\n"
+#define USAGE "Usage: ./smisasm <input .txt ASM file> <output .bin executable file>\n"
 #define MAX_INSTRUCTION_LEN 50
 #define MAX_STRING_LEN 500
 #define INT_LIMIT 65535

@@ -1,3 +1,30 @@
+/*
+
+SMIS ASM general-purpose assembler
+
+Documentation for the SMIS assembly language is hosted at https://github.com/Eyesonjune18/
+
+Program overview:
+
+    The assembling work is done in two passes.
+
+    (Setup) The assembly .txt file and the output .bin file are opened.
+
+    (Pass 1)
+        The ASM file is scanned for jump labels, which are placed into the symbol table.
+        Each symbol represents a name (to be checked against later for jump instructions),
+        And the program counter address of the first actual instruction after the label.
+
+    (Pass 2)
+        Once the symbol table has been read, the second pass parses all instructions,
+        including their operands, into the binary file. Jump instruction labels are checked
+        against the symbol table, and if the label is found, they are assembled into the
+        label address. If a label does not exist, the file cannot be assembled.
+
+*/
+
+// TODO: Add documentation to repo
+// TODO: Add file extension checker
 // TODO: (Global) look for integer overflows?
 
 #include <stdio.h>

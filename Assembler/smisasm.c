@@ -2,7 +2,7 @@
 
 SMIS ASM general-purpose assembler
 
-Documentation for the SMIS assembly language is hosted at https://github.com/Eyesonjune18/
+Documentation for the SMIS assembly language is hosted at https://github.com/Eyesonjune18/SMIS/blob/main/Documentation/SMIS.pdf
 
 Program overview:
 
@@ -23,7 +23,6 @@ Program overview:
 
 */
 
-// TODO: Add documentation to repo
 // TODO: (Global) look for integer overflows?
 
 #include <stdio.h>
@@ -510,6 +509,11 @@ unsigned int getRegisterNum(char* str) {
     // Gets the register address from a given string
     // Assumes that string has already been validated as a proper register address argument
 
+    if(!strncmp(str, "RZR", MAX_STRING_LEN)) return 0;
+    else if(!strncmp(str, "RSP", MAX_STRING_LEN)) return 15;
+    else if(!strncmp(str, "RBP", MAX_STRING_LEN)) return 14;
+    else if(!strncmp(str, "RLR", MAX_STRING_LEN)) return 13;
+
     return strtol(str + 1, NULL, 10);
 
 }
@@ -526,6 +530,11 @@ bool fitsRegisterSyntax(char* str) {
     // Checks if a given string fits the SMIS register standard syntax "R<4-bit unsigned register address>"
 
     if(*str != 'R') return false;
+
+    if(!strncmp(str, "RZR", MAX_STRING_LEN)) return true;
+    else if(!strncmp(str, "RSP", MAX_STRING_LEN)) return true;
+    else if(!strncmp(str, "RBP", MAX_STRING_LEN)) return true;
+    else if(!strncmp(str, "RLR", MAX_STRING_LEN)) return true;
 
     if(!containsOnlyNums(str + 1)) return false;
 

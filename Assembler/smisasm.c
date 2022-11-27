@@ -24,7 +24,6 @@ Program overview:
 */
 
 // TODO: Add documentation to repo
-// TODO: Add file extension checker
 // TODO: (Global) look for integer overflows?
 
 #include <stdio.h>
@@ -34,7 +33,7 @@ Program overview:
 #include <arpa/inet.h>
 
 
-#define USAGE "Usage: ./smisasm <ASM file> <output BIN file>\n"
+#define USAGE "Usage: ./smisasm <ASM .txt file> <output .bin file>\n"
 #define MAX_INSTRUCTION_LEN 50
 #define MAX_STRING_LEN 500
 #define INT_LIMIT 65535
@@ -128,12 +127,22 @@ bool isLabel(char* str);
 void trimLineBreak(char* str);
 void trimLabelColon(char* str);
 void trimChar(char* str, char c);
+bool endsWith(char* str, char* substr);
 
 
 int main(int argc, char** argv) {
 
     if(argc != 3) {
 
+        printf("Incorrect number of arguments supplied.\n");
+        printf(USAGE);
+        exit(-1);
+
+    }
+
+    if(!endsWith(argv[1], ".txt") || !endsWith(argv[2], ".bin")) {
+
+        printf("One or both of the supplied files have incorrect extensions.\n");
         printf(USAGE);
         exit(-1);
 
@@ -695,5 +704,17 @@ void trimChar(char* str, char c) {
         }
 
     }
+
+}
+
+bool endsWith(char* str, char* substr) {
+    // Checks if a given string ends with a given substring
+
+    int strlen = strnlen(str, MAX_STRING_LEN);
+    int substrlen = strnlen(substr, MAX_STRING_LEN);
+
+    str += (strlen - substrlen);
+
+    return !strncmp(str, substr, MAX_STRING_LEN);
 
 }

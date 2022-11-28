@@ -24,6 +24,7 @@ Program overview:
 */
 
 // TODO: (Global) look for integer overflows?
+// TODO: (Global) make sure that labels don't overflow max instruction length
 
 #include <stdio.h>
 #include <stdlib.h>

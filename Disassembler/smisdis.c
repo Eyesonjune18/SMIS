@@ -73,18 +73,22 @@ unsigned short int INSTRUCTION_ADDR = 0;
 void createLabels(char* readfile);
 void readInstructions(char* readfile, char* writefile);
 // char* disassembleInstruction(unsigned int instruction);
-// char* RType(unsigned int instruction);
-// char* IType(unsigned int instruction);
-// char* JType(unsigned int instruction);
+char* RType(unsigned int instruction);
+char* IType(unsigned int instruction);
+char* JType(unsigned int instruction);
 
 bool labelExists(unsigned short int addr);
 unsigned short int getOpcode(unsigned int instruction);
-unsigned short int getRegisterOperand(unsigned int instruction, unsigned short int opNum);
-unsigned short int getDestinationAddress(unsigned int instruction);
+char* formatRegNum(unsigned short int regNum);
+char* formatImmediateVal(unsigned short int immVal);
+unsigned short int getRegOperand(unsigned int instruction, unsigned short int opNum);
+unsigned short int getDestOrImmVal(unsigned int instruction);
 char* getLabelName(unsigned short int addr);
 char* generateLabelName(unsigned short int labelNum);
 bool isJump(unsigned int instruction);
 bool endsWith(char* str, char* substr);
+void trimLabelColon(char* str);
+void trimChar(char* str, char c);
 
 
 int main(int argc, char** argv) {
@@ -133,7 +137,7 @@ void createLabels(char* readfile) {
         instruction = ntohl(instruction);
         printf("%.8X", instruction);
         
-        unsigned short int addr = getDestinationAddress(instruction);
+        unsigned short int addr = getDestOrImmVal(instruction);
 
         if(isJump(instruction)) {
             
@@ -186,57 +190,15 @@ void readInstructions(char* readfile, char* writefile) {
         if(labelExists(INSTRUCTION_ADDR)) {
 
             printf("\n%s\n", getLabelName(INSTRUCTION_ADDR));
+            // TODO: Move this!
 
         }
 
         instruction = ntohl(instruction);
 
-        unsigned short int opcode = getOpcode(instruction);
-
-        if(opcode == OP_SET) printf("SET");
-        else if(opcode == OP_COPY) printf("COPY");
-        else if(opcode == OP_ADD) {
-            
-            printf("ADD R%i R%i R%i", getRegisterOperand(instruction, 1), getRegisterOperand(instruction, 2), getRegisterOperand(instruction, 3));
-            
-        }
-        else if(opcode == OP_ADD_IMM) printf("ADD-IMM");
-        else if(opcode == OP_SUBTRACT) printf("SUBTRACT");
-        else if(opcode == OP_SUBTRACT_IMM) printf("SUBTRACT-IMM");
-        else if(opcode == OP_MULTIPLY) printf("MULTIPLY");
-        else if(opcode == OP_MULTIPLY_IMM) printf("MULTIPLY-IMM");
-        else if(opcode == OP_DIVIDE) printf("DIVIDE");
-        else if(opcode == OP_DIVIDE_IMM) printf("DIVIDE-IMM");
-
-        else if(opcode == OP_COMPARE) printf("COMPARE");
-        else if(opcode == OP_COMPARE_IMM) printf("COMPARE-IMM");
-
-        else if(opcode == OP_SHIFT_LEFT) printf("SHIFT-LEFT");
-        else if(opcode == OP_SHIFT_LEFT_IMM) printf("SHIFT-LEFT-IMM");
-        else if(opcode == OP_SHIFT_RIGHT) printf("SHIFT-RIGHT");
-        else if(opcode == OP_SHIFT_RIGHT_IMM) printf("SHIFT-RIGHT-IMM");
-
-        else if(opcode == OP_AND) printf("AND");
-        else if(opcode == OP_AND_IMM) printf("AND-IMM");
-        else if(opcode == OP_OR) printf("OR");
-        else if(opcode == OP_OR_IMM) printf("OR-IMM");
-        else if(opcode == OP_XOR) printf("XOR");
-        else if(opcode == OP_XOR_IMM) printf("XOR-IMM");
-        else if(opcode == OP_NAND) printf("NAND");
-        else if(opcode == OP_NAND_IMM) printf("NAND-IMM");
-        else if(opcode == OP_NOR) printf("NOR");
-        else if(opcode == OP_NOR_IMM) printf("NOR-IMM");
-        else if(opcode == OP_NOT) printf("NOT");
-
-        else if(opcode == OP_LOAD) printf("LOAD");
-        else if(opcode == OP_STORE) printf("STORE");
-
-        else if(opcode == OP_JUMP) printf("JUMP");
-        else if(opcode == OP_JUMP_IF_ZERO) printf("JUMP-IF-ZERO");
-        else if(opcode == OP_JUMP_IF_NOTZERO) printf("JUMP-IF-NOTZERO");
-        else if(opcode == OP_JUMP_LINK) printf("JUMP-LINK");
-
-        else if(opcode == OP_HALT) printf("HALT");
+        printf("%s", RType(instruction));
+        printf("%s", IType(instruction));
+        printf("%s", JType(instruction));
 
         printf("\n");
 
@@ -255,25 +217,190 @@ void readInstructions(char* readfile, char* writefile) {
 
 // }
 
-// char* RType(unsigned int instruction) {
+char* RType(unsigned int instruction) {
+    // Converts an R-Type instruction to a string
+    // If the given instruction is not a valid R-Type, returns an empty string
 
-//     char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
+    char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
 
+    unsigned short int opcode = getOpcode(instruction);
+    char* opStr;
 
+    unsigned short int amountOfRegOperands = 3;
+    // Default number register operands is 3, COPY, COMPARE, and NOT only have 2
 
-// }
+    switch(opcode) {
 
-// char* IType(unsigned int instruction) {
+        case OP_COPY:
+            opStr = "COPY";
+            amountOfRegOperands = 2;
+            break;
+            
+        case OP_ADD:
+            opStr = "ADD"; break;
+        case OP_SUBTRACT:
+            opStr = "SUBTRACT"; break;
+        case OP_MULTIPLY:
+            opStr = "MULTIPLY"; break;
+        case OP_DIVIDE:
+            opStr = "DIVIDE"; break;
 
+        case OP_COMPARE:
+            opStr = "COMPARE";
+            amountOfRegOperands = 2;
+            break;
 
+        case OP_SHIFT_LEFT:
+            opStr = "SHIFT-LEFT"; break;
+        case OP_SHIFT_RIGHT:
+            opStr = "SHIFT-RIGHT"; break;
+            
+        case OP_AND:
+            opStr = "AND"; break;
+        case OP_OR:
+            opStr = "OR"; break;
+        case OP_XOR:
+            opStr = "XOR"; break;
+        case OP_NAND:
+            opStr = "NAND"; break;
+        case OP_NOR:
+            opStr = "NOR"; break;
+        case OP_NOT:
+            opStr = "NOT";
+            amountOfRegOperands = 2;
+            break;
 
-// }
+        default: return instructionStr;
 
-// char* JType(unsigned int instruction) {
+    }
 
+    if(amountOfRegOperands == 2) {
 
+        snprintf(instructionStr, MAX_INSTRUCTION_LEN, "%s %s %s", opStr,
+        formatRegNum(getRegOperand(instruction, 1)), formatRegNum(getRegOperand(instruction, 2)));
 
-// }
+    } else if(amountOfRegOperands == 3) {
+
+        snprintf(instructionStr, MAX_INSTRUCTION_LEN, "%s %s %s %s", opStr,
+        formatRegNum(getRegOperand(instruction, 1)), formatRegNum(getRegOperand(instruction, 2)),
+        formatRegNum(getRegOperand(instruction, 3)));
+
+    }
+
+    return instructionStr;
+
+}
+
+char* IType(unsigned int instruction) {
+    // Converts an I-Type instruction to a string
+    // If the given instruction is not a valid I-Type, returns an empty string
+
+    char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
+
+    unsigned short int opcode = getOpcode(instruction);
+    char* opStr;
+
+    unsigned short int amountOfRegOperands = 2;
+    // Default number register operands is 2, SET only has 1
+
+    switch(opcode) {
+
+        case OP_SET:
+            opStr = "SET";
+            amountOfRegOperands = 1;
+            break;
+
+        case OP_ADD_IMM:
+            opStr = "ADD-IMM"; break;
+        case OP_SUBTRACT_IMM:
+            opStr = "SUBTRACT-IMM"; break;
+        case OP_MULTIPLY_IMM:
+            opStr = "MULTIPLY-IMM"; break;
+        case OP_DIVIDE_IMM:
+            opStr = "DIVIDE-IMM"; break;
+
+        case OP_COMPARE_IMM:
+            opStr = "COMPARE-IMM"; break;
+            
+        case OP_SHIFT_LEFT_IMM:
+            opStr = "SHIFT-LEFT-IMM"; break;
+        case OP_SHIFT_RIGHT_IMM:
+            opStr = "SHIFT-RIGHT-IMM"; break;
+
+        case OP_AND_IMM:
+            opStr = "AND-IMM"; break;
+        case OP_OR_IMM:
+            opStr = "OR-IMM"; break;
+        case OP_XOR_IMM:
+            opStr = "XOR-IMM"; break;
+        case OP_NAND_IMM:
+            opStr = "NAND-IMM"; break;
+        case OP_NOR_IMM:
+            opStr = "NOR-IMM"; break;
+
+        case OP_LOAD:
+            opStr = "LOAD"; break;
+        case OP_STORE:
+            opStr = "STORE"; break;
+
+        case OP_HALT:
+            instructionStr = "HALT";
+            return instructionStr;
+
+        default: return instructionStr;
+
+    }
+
+    if(amountOfRegOperands == 1) {
+
+        snprintf(instructionStr, MAX_INSTRUCTION_LEN, "%s %s %s", opStr,
+        formatRegNum(getRegOperand(instruction, 1)),
+        formatImmediateVal(getDestOrImmVal(instruction)));
+
+    } else if(amountOfRegOperands == 2) {
+
+        snprintf(instructionStr, MAX_INSTRUCTION_LEN, "%s %s %s %s", opStr,
+        formatRegNum(getRegOperand(instruction, 1)), formatRegNum(getRegOperand(instruction, 2)),
+        formatImmediateVal(getDestOrImmVal(instruction)));
+
+    }
+
+    return instructionStr;
+
+}
+
+char* JType(unsigned int instruction) {
+    // Converts a J-Type instruction to a string
+    // If the given instruction is not a valid J-Type, returns an empty string
+
+    char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
+
+    unsigned short int opcode = getOpcode(instruction);
+    char* opStr;
+
+    switch(opcode) {
+
+        case OP_JUMP:
+            opStr = "JUMP"; break;
+        case OP_JUMP_IF_ZERO:
+            opStr = "JUMP-IF-ZERO"; break;
+        case OP_JUMP_IF_NOTZERO:
+            opStr = "JUMP-IF-NOTZERO"; break;
+        case OP_JUMP_LINK:
+            opStr = "JUMP-LINK"; break;
+
+        default: return instructionStr;
+
+    }
+
+    char* lblStr = getLabelName(getDestOrImmVal(instruction));
+    trimLabelColon(lblStr);
+
+    snprintf(instructionStr, MAX_INSTRUCTION_LEN, "%s %s", opStr, lblStr);
+
+    return instructionStr;
+
+}
 
 bool labelExists(unsigned short int addr) {
     // Returns true if a label already exists in the symbol table
@@ -299,7 +426,42 @@ unsigned short int getOpcode(unsigned int instruction) {
 
 }
 
-unsigned short int getRegisterOperand(unsigned int instruction, unsigned short int opNum) {
+char* formatRegNum(unsigned short int regNum) {
+    // Translates a register from numerical form to string form
+
+    char* regStr = malloc(4 * sizeof(char));
+
+    switch(regNum) {
+
+        case 0:
+            snprintf(regStr, 4, "RZR"); break;
+        case 15:
+            snprintf(regStr, 4, "RSP"); break;
+        case 14:
+            snprintf(regStr, 4, "RBP"); break;
+        case 13:
+            snprintf(regStr, 4, "RLR"); break;
+        default:
+            snprintf(regStr, 4, "R%i", regNum); break;
+
+    }
+
+    return regStr;
+
+}
+
+char* formatImmediateVal(unsigned short int immVal) {
+    // Translates a numerical immediate value to a string starting with #
+
+    char* immStr = malloc(7 * sizeof(char));
+    // Max length is 7 because the largest immediate value is 65535, which is 5 digits - plus 2 for '#' and '\0'
+    snprintf(immStr, 7, "#%i", immVal);
+
+    return immStr;
+
+}
+
+unsigned short int getRegOperand(unsigned int instruction, unsigned short int opNum) {
     // Gets the first operand of a given instruction
 
     opNum--;
@@ -316,10 +478,10 @@ unsigned short int getRegisterOperand(unsigned int instruction, unsigned short i
 
 }
 
-unsigned short int getDestinationAddress(unsigned int instruction) {
-    // Gets the destination address of a J-Type instruction
+unsigned short int getDestOrImmVal(unsigned int instruction) {
+    // Gets the destination address of a J-Type instruction or immediate value of an I-Type instruction
 
-    return instruction & 0xFF;
+    return instruction & 0xFFFF;
 
 }
 
@@ -343,7 +505,7 @@ char* generateLabelName(unsigned short int labelNum) {
     // Generates a generic label name with a given number
 
     char* name = malloc(14 * sizeof(char));
-    snprintf(name, 14, "Label %i:", labelNum);
+    snprintf(name, 14, "Label_%i:", labelNum);
 
     return name;
 
@@ -367,5 +529,31 @@ bool endsWith(char* str, char* substr) {
     str += (strlen - substrlen);
 
     return !strncmp(str, substr, MAX_STRING_LEN);
+
+}
+
+void trimLabelColon(char* str) {
+    // Trims a trailing colon from a string
+
+    trimChar(str, ':');
+
+}
+
+void trimChar(char* str, char c) {
+    // Trims the first instance of a given character from the end of a string
+    // If the string does not contain the character, it remains unchanged
+
+    int len = strnlen(str, MAX_STRING_LEN);
+
+    for(int i = len; i >= 0; i--) {
+        
+        if(str[i] == c) {
+            
+            str[i] = '\0';
+            return;
+
+        }
+
+    }
 
 }

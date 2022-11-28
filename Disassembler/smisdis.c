@@ -1,3 +1,30 @@
+/*
+
+SMIS ASM general-purpose disassembler
+
+Documentation for the SMIS assembly language is hosted at https://github.com/Eyesonjune18/SMIS/blob/main/Documentation/SMIS.pdf
+
+Program overview:
+
+    The disassembly work is done in two passes.
+
+    (Setup) The input .bin machine code file and the output .txt ASM file are opened.
+
+    (Pass 1)
+        The machine code file is scanned for jump labels by reading J-Type instruction
+        destination addresses. These addresses are placed into the symbol table, along with
+        a generic label name. Each symbol represents a name and a target program counter address
+        (to be checked against later for jump instructions).
+
+    (Pass 2)
+        Once the symbol table has been created, the second pass parses all instructions,
+        including their operands, into the ASM file. Jump instruction addresses are checked
+        against the symbol table, and if the label is found, they are disassembled into their
+        corresponding label name. If a label does not exist, the file cannot be disassembled.
+
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,10 +32,11 @@
 #include <arpa/inet.h>
 
 
-#define USAGE "Usage: ./smisdis <input .bin executable file> <output .txt ASM file>\n"
+#define USAGE "Usage: ./smisdis <input .bin machine code file> <output .txt ASM file>\n"
 #define MAX_INSTRUCTION_LEN 50
 #define MAX_STRING_LEN 500
 #define INT_LIMIT 65535
+#define INSTRUCTION_NUMBER INSTRUCTION_ADDR / 2
 
 #define OP_SET 1
 #define OP_COPY 2
@@ -72,23 +100,31 @@ unsigned short int INSTRUCTION_ADDR = 0;
 
 void createLabels(char* readfile);
 void readInstructions(char* readfile, char* writefile);
-// char* disassembleInstruction(unsigned int instruction);
+// Program control functions
+
+char* disassembleInstruction(unsigned int instruction);
 char* RType(unsigned int instruction);
 char* IType(unsigned int instruction);
 char* JType(unsigned int instruction);
+// Instruction disassembly functions
 
-bool labelExists(unsigned short int addr);
-unsigned short int getOpcode(unsigned int instruction);
 char* formatRegNum(unsigned short int regNum);
 char* formatImmediateVal(unsigned short int immVal);
+bool labelExists(unsigned short int addr);
+unsigned short int getOpcode(unsigned int instruction);
 unsigned short int getRegOperand(unsigned int instruction, unsigned short int opNum);
 unsigned short int getDestOrImmVal(unsigned int instruction);
 char* getLabelName(unsigned short int addr);
 char* generateLabelName(unsigned short int labelNum);
 bool isJump(unsigned int instruction);
+// Disassembler utility functions
+
+bool isEmpty(char* str);
 bool endsWith(char* str, char* substr);
+void addLineBreak(char* str);
 void trimLabelColon(char* str);
 void trimChar(char* str, char c);
+// General utility functions
 
 
 int main(int argc, char** argv) {
@@ -135,17 +171,13 @@ void createLabels(char* readfile) {
     while(fread(&instruction, 4, 1, binFile)) {
 
         instruction = ntohl(instruction);
-        printf("%.8X", instruction);
         
         unsigned short int addr = getDestOrImmVal(instruction);
 
         if(isJump(instruction)) {
-            
-            printf(" <-- This is a JUMP");
+        
 
             if(!labelExists(addr)) {
-
-                printf(", name of %s", generateLabelName(SYMBOL_COUNT));
 
                 Label l;
                 l.labelName = generateLabelName(SYMBOL_COUNT);
@@ -161,11 +193,7 @@ void createLabels(char* readfile) {
 
         }
 
-        printf("\n");
-
     }
-
-    printf("\n");
 
     fclose(binFile);
 
@@ -174,6 +202,7 @@ void createLabels(char* readfile) {
 void readInstructions(char* readfile, char* writefile) {
 
     FILE* binFile;
+    FILE* txtFile;
 
     if(!(binFile = fopen(readfile, "rb"))) {
 
@@ -183,45 +212,74 @@ void readInstructions(char* readfile, char* writefile) {
 
     }
 
+    if(!(txtFile = fopen(writefile, "w"))) {
+
+        printf("File %s does not exist.\n", writefile);
+        printf(USAGE);
+        exit(-1);
+
+    }
+
     unsigned int instruction;
     
     while(fread(&instruction, 4, 1, binFile)) {
 
+        instruction = ntohl(instruction);
+
         if(labelExists(INSTRUCTION_ADDR)) {
 
-            printf("\n%s\n", getLabelName(INSTRUCTION_ADDR));
-            // TODO: Move this!
+            if(INSTRUCTION_ADDR != 0) fputc('\n', txtFile);
+            fprintf(txtFile, "%s\n", getLabelName(INSTRUCTION_ADDR));
 
         }
 
-        instruction = ntohl(instruction);
-
-        printf("%s", RType(instruction));
-        printf("%s", IType(instruction));
-        printf("%s", JType(instruction));
-
-        printf("\n");
+        fprintf(txtFile, "%s\n", disassembleInstruction(instruction));
 
         INSTRUCTION_ADDR += 2;
 
     }
 
+    freopen(writefile, "r", txtFile);
+
+    char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
+    while(fgets(instructionStr, MAX_INSTRUCTION_LEN, txtFile)) printf("%s", instructionStr);
+    free(instructionStr);
+    // TODO: Possible refactor into separate function
+
     fclose(binFile);
+    fclose(txtFile);
 
 }
 
-// char* disassembleInstruction(unsigned int instruction) {
-//     // Gets the corresponding line of code for a given instruction
+char* disassembleInstruction(unsigned int instruction) {
+    // Gets the corresponding line of code for a given instruction
 
-    
+    char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
 
-// }
+    char* rStr = RType(instruction);
+    char* iStr = IType(instruction);
+    char* jStr = JType(instruction);
+
+    if(!isEmpty(rStr)) instructionStr = rStr;
+    else if(!isEmpty(iStr)) instructionStr = iStr;
+    else if(!isEmpty(jStr)) instructionStr = jStr;
+    else {
+
+        printf("Instruction %i did not match any known opcodes\n", INSTRUCTION_NUMBER);
+        exit(-1);
+
+    }
+
+    return instructionStr;
+
+}
 
 char* RType(unsigned int instruction) {
     // Converts an R-Type instruction to a string
     // If the given instruction is not a valid R-Type, returns an empty string
 
     char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
+    *instructionStr = '\0';
 
     unsigned short int opcode = getOpcode(instruction);
     char* opStr;
@@ -296,6 +354,7 @@ char* IType(unsigned int instruction) {
     // If the given instruction is not a valid I-Type, returns an empty string
 
     char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
+    *instructionStr = '\0';
 
     unsigned short int opcode = getOpcode(instruction);
     char* opStr;
@@ -374,6 +433,7 @@ char* JType(unsigned int instruction) {
     // If the given instruction is not a valid J-Type, returns an empty string
 
     char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
+    *instructionStr = '\0';
 
     unsigned short int opcode = getOpcode(instruction);
     char* opStr;
@@ -399,30 +459,6 @@ char* JType(unsigned int instruction) {
     snprintf(instructionStr, MAX_INSTRUCTION_LEN, "%s %s", opStr, lblStr);
 
     return instructionStr;
-
-}
-
-bool labelExists(unsigned short int addr) {
-    // Returns true if a label already exists in the symbol table
-
-    for(int i = 0; i < SYMBOL_COUNT; i++) {
-
-        Label l = SYMBOL_TABLE[i];
-
-        // printf("Requested address: %.4X\nLabel name: %s\nLabel address: %.4X\n", addr, l.labelName, l.PCAddress);
-
-        if(addr == l.PCAddress) return true;
-
-    }
-
-    return false;
-
-}
-
-unsigned short int getOpcode(unsigned int instruction) {
-    // Gets the opcode of a given instruction
-
-    return instruction >> 24;
 
 }
 
@@ -461,6 +497,30 @@ char* formatImmediateVal(unsigned short int immVal) {
 
 }
 
+bool labelExists(unsigned short int addr) {
+    // Returns true if a label already exists in the symbol table
+
+    for(int i = 0; i < SYMBOL_COUNT; i++) {
+
+        Label l = SYMBOL_TABLE[i];
+
+        // printf("Requested address: %.4X\nLabel name: %s\nLabel address: %.4X\n", addr, l.labelName, l.PCAddress);
+
+        if(addr == l.PCAddress) return true;
+
+    }
+
+    return false;
+
+}
+
+unsigned short int getOpcode(unsigned int instruction) {
+    // Gets the opcode of a given instruction
+
+    return instruction >> 24;
+
+}
+
 unsigned short int getRegOperand(unsigned int instruction, unsigned short int opNum) {
     // Gets the first operand of a given instruction
 
@@ -468,7 +528,7 @@ unsigned short int getRegOperand(unsigned int instruction, unsigned short int op
 
     if(opNum > 2) {
 
-        printf("Internal error: cannot retrieve register operand %i\n", opNum + 1);
+        printf("Internal error: cannot retrieve register operand %i at instruction %i\n", opNum + 1, INSTRUCTION_NUMBER);
         exit(-2);
 
     }
@@ -492,11 +552,18 @@ char* getLabelName(unsigned short int addr) {
 
         Label l = SYMBOL_TABLE[i];
 
-        if(addr == l.PCAddress) return l.labelName;
+        if(addr == l.PCAddress) {
+            
+            char* lblName = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
+            strncpy(lblName, l.labelName, MAX_INSTRUCTION_LEN);
+            
+            return lblName;
+        
+        }
 
     }
 
-    printf("Internal error: cannot find label for address %.4X in symbol table\n", addr);
+    printf("Internal error: cannot find label for address %.4X in symbol table at instruction %i\n", addr, INSTRUCTION_NUMBER);
     exit(-2);
 
 }
@@ -520,6 +587,13 @@ bool isJump(unsigned int instruction) {
 
 }
 
+bool isEmpty(char* str) {
+    // Checks if a given string is empty (starts with null terminator)
+
+    return *str == '\0';
+
+}
+
 bool endsWith(char* str, char* substr) {
     // Checks if a given string ends with a given substring
 
@@ -532,15 +606,25 @@ bool endsWith(char* str, char* substr) {
 
 }
 
+void addLineBreak(char* str) {
+    // Adds a trailing line break to a given string
+
+    int len = strnlen(str, MAX_STRING_LEN) + 2;
+    
+    str[len - 2] = '\n';
+    str[len - 1] = '\0';
+
+}
+
 void trimLabelColon(char* str) {
-    // Trims a trailing colon from a string
+    // Trims a trailing colon from a given string
 
     trimChar(str, ':');
 
 }
 
 void trimChar(char* str, char c) {
-    // Trims the first instance of a given character from the end of a string
+    // Trims the first instance of a given character from the end of a given string
     // If the string does not contain the character, it remains unchanged
 
     int len = strnlen(str, MAX_STRING_LEN);

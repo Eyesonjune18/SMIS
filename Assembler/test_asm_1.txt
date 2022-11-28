@@ -1,14 +1,20 @@
 // Test program
 
+SomeLabel:
+
 SET R1 #5
 ADD-IMM R1 R1 #5
 ADD R1 R1 R1
+
+JUMP-LINK SomeLabel
 
 MULTIPLY-IMM R1 R1 #444
 SET R10 #4096
 STORE R1 R10 #0
 
 SET R1 #65535
+
+JUMP-IF-ZERO SomeLabel
 
 Test1:
 

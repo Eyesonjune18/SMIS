@@ -26,9 +26,9 @@ Program overview:
 // TODO: (Global) look for integer overflows?
 
 #include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 #include <arpa/inet.h>
 
 
@@ -152,7 +152,6 @@ int main(int argc, char** argv) {
     readLabels(argv[1]);
     readInstructions(argv[1], argv[2]);
 
-
     free(SYMBOL_TABLE);
 
 }
@@ -182,7 +181,7 @@ void readLabels(char* readfile) {
 
             Label l;
             l.labelName = strndup(line, MAX_INSTRUCTION_LEN);
-            l.PCAddress = INSTRUCTION_ADDR + 2;
+            l.PCAddress = INSTRUCTION_ADDR;
 
             SYMBOL_TABLE = realloc(SYMBOL_TABLE, (SYMBOL_COUNT + 1) * sizeof(Label));
 
@@ -272,22 +271,6 @@ unsigned int assembleInstruction(char* instruction) {
         exit(-1);
 
     }
-
-}
-
-unsigned short int getLabelAddr(char* lbl) {
-    // Reads the symbol table and finds a corresponding label address, terminating the program if none is found
-
-    for(int i = 0; i < SYMBOL_COUNT; i++) {
-
-        Label l = SYMBOL_TABLE[i];
-
-        if(!strncmp(l.labelName, lbl, MAX_INSTRUCTION_LEN)) return l.PCAddress;
-
-    }
-
-    printf("Cannot use label %s at line %i because it does not exist in the symbol table\n", lbl, LINE_NUMBER);
-    exit(-1);
 
 }
 
@@ -502,6 +485,22 @@ unsigned int SType(char* instruction) {
     else instructionNum += op << 12;
 
     return instructionNum;
+
+}
+
+unsigned short int getLabelAddr(char* lbl) {
+    // Reads the symbol table and finds a corresponding label address, terminating the program if none is found
+
+    for(int i = 0; i < SYMBOL_COUNT; i++) {
+
+        Label l = SYMBOL_TABLE[i];
+
+        if(!strncmp(l.labelName, lbl, MAX_INSTRUCTION_LEN)) return l.PCAddress;
+
+    }
+
+    printf("Cannot use label %s at line %i because it does not exist in the symbol table\n", lbl, LINE_NUMBER);
+    exit(-1);
 
 }
 

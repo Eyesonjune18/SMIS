@@ -72,10 +72,15 @@ unsigned short int INSTRUCTION_ADDR = 0;
 
 void createLabels(char* readfile);
 void readInstructions(char* readfile, char* writefile);
+// char* disassembleInstruction(unsigned int instruction);
+// char* RType(unsigned int instruction);
+// char* IType(unsigned int instruction);
+// char* JType(unsigned int instruction);
 
 bool labelExists(unsigned short int addr);
 unsigned short int getOpcode(unsigned int instruction);
-unsigned short int getDestAddress(unsigned int instruction);
+unsigned short int getRegisterOperand(unsigned int instruction, unsigned short int opNum);
+unsigned short int getDestinationAddress(unsigned int instruction);
 char* getLabelName(unsigned short int addr);
 char* generateLabelName(unsigned short int labelNum);
 bool isJump(unsigned int instruction);
@@ -128,7 +133,7 @@ void createLabels(char* readfile) {
         instruction = ntohl(instruction);
         printf("%.8X", instruction);
         
-        unsigned short int addr = getDestAddress(instruction);
+        unsigned short int addr = getDestinationAddress(instruction);
 
         if(isJump(instruction)) {
             
@@ -190,7 +195,11 @@ void readInstructions(char* readfile, char* writefile) {
 
         if(opcode == OP_SET) printf("SET");
         else if(opcode == OP_COPY) printf("COPY");
-        else if(opcode == OP_ADD) printf("ADD");
+        else if(opcode == OP_ADD) {
+            
+            printf("ADD R%i R%i R%i", getRegisterOperand(instruction, 1), getRegisterOperand(instruction, 2), getRegisterOperand(instruction, 3));
+            
+        }
         else if(opcode == OP_ADD_IMM) printf("ADD-IMM");
         else if(opcode == OP_SUBTRACT) printf("SUBTRACT");
         else if(opcode == OP_SUBTRACT_IMM) printf("SUBTRACT-IMM");
@@ -198,12 +207,15 @@ void readInstructions(char* readfile, char* writefile) {
         else if(opcode == OP_MULTIPLY_IMM) printf("MULTIPLY-IMM");
         else if(opcode == OP_DIVIDE) printf("DIVIDE");
         else if(opcode == OP_DIVIDE_IMM) printf("DIVIDE-IMM");
+
         else if(opcode == OP_COMPARE) printf("COMPARE");
         else if(opcode == OP_COMPARE_IMM) printf("COMPARE-IMM");
+
         else if(opcode == OP_SHIFT_LEFT) printf("SHIFT-LEFT");
         else if(opcode == OP_SHIFT_LEFT_IMM) printf("SHIFT-LEFT-IMM");
         else if(opcode == OP_SHIFT_RIGHT) printf("SHIFT-RIGHT");
         else if(opcode == OP_SHIFT_RIGHT_IMM) printf("SHIFT-RIGHT-IMM");
+
         else if(opcode == OP_AND) printf("AND");
         else if(opcode == OP_AND_IMM) printf("AND-IMM");
         else if(opcode == OP_OR) printf("OR");
@@ -215,12 +227,15 @@ void readInstructions(char* readfile, char* writefile) {
         else if(opcode == OP_NOR) printf("NOR");
         else if(opcode == OP_NOR_IMM) printf("NOR-IMM");
         else if(opcode == OP_NOT) printf("NOT");
+
         else if(opcode == OP_LOAD) printf("LOAD");
         else if(opcode == OP_STORE) printf("STORE");
+
         else if(opcode == OP_JUMP) printf("JUMP");
         else if(opcode == OP_JUMP_IF_ZERO) printf("JUMP-IF-ZERO");
         else if(opcode == OP_JUMP_IF_NOTZERO) printf("JUMP-IF-NOTZERO");
         else if(opcode == OP_JUMP_LINK) printf("JUMP-LINK");
+
         else if(opcode == OP_HALT) printf("HALT");
 
         printf("\n");
@@ -232,6 +247,33 @@ void readInstructions(char* readfile, char* writefile) {
     fclose(binFile);
 
 }
+
+// char* disassembleInstruction(unsigned int instruction) {
+//     // Gets the corresponding line of code for a given instruction
+
+    
+
+// }
+
+// char* RType(unsigned int instruction) {
+
+//     char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
+
+
+
+// }
+
+// char* IType(unsigned int instruction) {
+
+
+
+// }
+
+// char* JType(unsigned int instruction) {
+
+
+
+// }
 
 bool labelExists(unsigned short int addr) {
     // Returns true if a label already exists in the symbol table
@@ -257,7 +299,24 @@ unsigned short int getOpcode(unsigned int instruction) {
 
 }
 
-unsigned short int getDestAddress(unsigned int instruction) {
+unsigned short int getRegisterOperand(unsigned int instruction, unsigned short int opNum) {
+    // Gets the first operand of a given instruction
+
+    opNum--;
+
+    if(opNum > 2) {
+
+        printf("Internal error: cannot retrieve register operand %i\n", opNum + 1);
+        exit(-2);
+
+    }
+
+    return (instruction & (0x00F00000 >> (4 * opNum))) >> (20 - (4 * opNum));
+    // TODO: There is probably a much nicer way to do this, but it works
+
+}
+
+unsigned short int getDestinationAddress(unsigned int instruction) {
     // Gets the destination address of a J-Type instruction
 
     return instruction & 0xFF;

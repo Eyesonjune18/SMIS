@@ -10,7 +10,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/Disassembler/smisdis",
-            "args": ["testbin.bin", "asdf.txt"],
+            "args": ["test_asm_1.bin", "asdf.txt"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

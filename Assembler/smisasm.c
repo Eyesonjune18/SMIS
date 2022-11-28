@@ -8,15 +8,15 @@ Program overview:
 
     The assembling work is done in two passes.
 
-    (Setup) The assembly .txt file and the output .bin file are opened.
+    (Setup) The input .txt ASM file and the output .bin machine code file are opened.
 
     (Pass 1)
         The ASM file is scanned for jump labels, which are placed into the symbol table.
         Each symbol represents a name (to be checked against later for jump instructions),
-        And the program counter address of the first actual instruction after the label.
+        and the program counter address of the first actual instruction after the label.
 
     (Pass 2)
-        Once the symbol table has been read, the second pass parses all instructions,
+        Once the symbol table has been created, the second pass parses all instructions,
         including their operands, into the binary file. Jump instruction labels are checked
         against the symbol table, and if the label is found, they are assembled into their
         corresponding label address. If a label does not exist, the file cannot be assembled.
@@ -25,6 +25,7 @@ Program overview:
 
 // TODO: (Global) look for integer overflows?
 // TODO: (Global) make sure that labels don't overflow max instruction length
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,18 +105,19 @@ unsigned int LINE_NUMBER = 1;
 void readLabels(char* readfile);
 void readInstructions(char* readfile, char* writefile);
 unsigned int assembleInstruction(char* instruction);
+// Program control functions
 
 unsigned int RType(char* instruction);
 unsigned int IType(char* instruction);
 unsigned int JType(char* instruction);
 unsigned int SType(char* instruction);
+// Instruction assembly functions
 
 unsigned short int getLabelAddr(char* lbl);
 unsigned int getRegisterNum(char* str);
 unsigned int getImmediateVal(char* str);
 bool fitsRegisterSyntax(char* str);
 bool fitsImmediateSyntax(char* str);
-
 bool containsOnlyNums(char* str);
 int countWords(char* str);
 char* getFirstWord(char* str);
@@ -124,10 +126,13 @@ char* getBinary(unsigned int n, int length);
 unsigned char binaryChar(unsigned int n);
 bool isBlankLineOrComment(char* str);
 bool isLabel(char* str);
+// Assembler utility functions
+
 void trimLineBreak(char* str);
 void trimLabelColon(char* str);
 void trimChar(char* str, char c);
 bool endsWith(char* str, char* substr);
+// General utility functions
 
 
 int main(int argc, char** argv) {
@@ -684,21 +689,21 @@ bool isLabel(char* str) {
 }
 
 void trimLineBreak(char* str) {
-    // Trims a trailing line break from a string
+    // Trims a trailing line break from a given string
 
     trimChar(str, '\n');
 
 }
 
 void trimLabelColon(char* str) {
-    // Trims a trailing colon from a string
+    // Trims a trailing colon from a given string
 
     trimChar(str, ':');
 
 }
 
 void trimChar(char* str, char c) {
-    // Trims the first instance of a given character from the end of a string
+    // Trims the first instance of a given character from the end of a given string
     // If the string does not contain the character, it remains unchanged
 
     int len = strnlen(str, MAX_STRING_LEN);

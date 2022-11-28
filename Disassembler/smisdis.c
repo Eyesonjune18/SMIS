@@ -74,7 +74,9 @@ void createLabels(char* readfile);
 void readInstructions(char* readfile, char* writefile);
 
 bool labelExists(unsigned short int addr);
+unsigned short int getOpcode(unsigned int instruction);
 unsigned short int getDestAddress(unsigned int instruction);
+char* getLabelName(unsigned short int addr);
 char* generateLabelName(unsigned short int labelNum);
 bool isJump(unsigned int instruction);
 bool endsWith(char* str, char* substr);
@@ -101,7 +103,7 @@ int main(int argc, char** argv) {
     SYMBOL_TABLE = NULL;
 
     createLabels(argv[1]);
-    // readInstructions(argv[1], argv[2]);
+    readInstructions(argv[1], argv[2]);
 
     free(SYMBOL_TABLE);
     
@@ -154,13 +156,80 @@ void createLabels(char* readfile) {
 
     }
 
+    printf("\n");
+
     fclose(binFile);
 
 }
 
 void readInstructions(char* readfile, char* writefile) {
 
+    FILE* binFile;
+
+    if(!(binFile = fopen(readfile, "rb"))) {
+
+        printf("File %s does not exist.\n", readfile);
+        printf(USAGE);
+        exit(-1);
+
+    }
+
+    unsigned int instruction;
     
+    while(fread(&instruction, 4, 1, binFile)) {
+
+        if(labelExists(INSTRUCTION_ADDR)) {
+
+            printf("\n%s\n", getLabelName(INSTRUCTION_ADDR));
+
+        }
+
+        instruction = ntohl(instruction);
+
+        unsigned short int opcode = getOpcode(instruction);
+
+        if(opcode == OP_SET) printf("SET");
+        else if(opcode == OP_COPY) printf("COPY");
+        else if(opcode == OP_ADD) printf("ADD");
+        else if(opcode == OP_ADD_IMM) printf("ADD-IMM");
+        else if(opcode == OP_SUBTRACT) printf("SUBTRACT");
+        else if(opcode == OP_SUBTRACT_IMM) printf("SUBTRACT-IMM");
+        else if(opcode == OP_MULTIPLY) printf("MULTIPLY");
+        else if(opcode == OP_MULTIPLY_IMM) printf("MULTIPLY-IMM");
+        else if(opcode == OP_DIVIDE) printf("DIVIDE");
+        else if(opcode == OP_DIVIDE_IMM) printf("DIVIDE-IMM");
+        else if(opcode == OP_COMPARE) printf("COMPARE");
+        else if(opcode == OP_COMPARE_IMM) printf("COMPARE-IMM");
+        else if(opcode == OP_SHIFT_LEFT) printf("SHIFT-LEFT");
+        else if(opcode == OP_SHIFT_LEFT_IMM) printf("SHIFT-LEFT-IMM");
+        else if(opcode == OP_SHIFT_RIGHT) printf("SHIFT-RIGHT");
+        else if(opcode == OP_SHIFT_RIGHT_IMM) printf("SHIFT-RIGHT-IMM");
+        else if(opcode == OP_AND) printf("AND");
+        else if(opcode == OP_AND_IMM) printf("AND-IMM");
+        else if(opcode == OP_OR) printf("OR");
+        else if(opcode == OP_OR_IMM) printf("OR-IMM");
+        else if(opcode == OP_XOR) printf("XOR");
+        else if(opcode == OP_XOR_IMM) printf("XOR-IMM");
+        else if(opcode == OP_NAND) printf("NAND");
+        else if(opcode == OP_NAND_IMM) printf("NAND-IMM");
+        else if(opcode == OP_NOR) printf("NOR");
+        else if(opcode == OP_NOR_IMM) printf("NOR-IMM");
+        else if(opcode == OP_NOT) printf("NOT");
+        else if(opcode == OP_LOAD) printf("LOAD");
+        else if(opcode == OP_STORE) printf("STORE");
+        else if(opcode == OP_JUMP) printf("JUMP");
+        else if(opcode == OP_JUMP_IF_ZERO) printf("JUMP-IF-ZERO");
+        else if(opcode == OP_JUMP_IF_NOTZERO) printf("JUMP-IF-NOTZERO");
+        else if(opcode == OP_JUMP_LINK) printf("JUMP-LINK");
+        else if(opcode == OP_HALT) printf("HALT");
+
+        printf("\n");
+
+        INSTRUCTION_ADDR += 2;
+
+    }
+
+    fclose(binFile);
 
 }
 
@@ -171,6 +240,8 @@ bool labelExists(unsigned short int addr) {
 
         Label l = SYMBOL_TABLE[i];
 
+        // printf("Requested address: %.4X\nLabel name: %s\nLabel address: %.4X\n", addr, l.labelName, l.PCAddress);
+
         if(addr == l.PCAddress) return true;
 
     }
@@ -179,10 +250,33 @@ bool labelExists(unsigned short int addr) {
 
 }
 
+unsigned short int getOpcode(unsigned int instruction) {
+    // Gets the opcode of a given instruction
+
+    return instruction >> 24;
+
+}
+
 unsigned short int getDestAddress(unsigned int instruction) {
     // Gets the destination address of a J-Type instruction
 
-    return instruction & 0x10;
+    return instruction & 0xFF;
+
+}
+
+char* getLabelName(unsigned short int addr) {
+    // Gets the label name associated with a given address
+
+    for(int i = 0; i < SYMBOL_COUNT; i++) {
+
+        Label l = SYMBOL_TABLE[i];
+
+        if(addr == l.PCAddress) return l.labelName;
+
+    }
+
+    printf("Internal error: cannot find label for address %.4X in symbol table\n", addr);
+    exit(-2);
 
 }
 

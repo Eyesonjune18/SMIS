@@ -30,6 +30,7 @@ Program overview:
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <arpa/inet.h>
 
@@ -93,37 +94,37 @@ typedef struct Label {
 
 Label* SYMBOL_TABLE;
 // Stores all labels in the assembled file
-unsigned int SYMBOL_COUNT = 0;
+uint32_t SYMBOL_COUNT = 0;
 // Stores the amount of symbols to avoid iterating over unallocated pointers
 
 unsigned short int INSTRUCTION_ADDR = 0;
 // Instruction address is stored for symbol table usage
-unsigned int LINE_NUMBER = 1;
+uint32_t LINE_NUMBER = 1;
 // Line number is stored in order to give more descriptive error messages
 
 
 void readLabels(char* readfile);
 void readInstructions(char* readfile, char* writefile);
-unsigned int assembleInstruction(char* instruction);
+uint32_t assembleInstruction(char* instruction);
 // Program control functions
 
-unsigned int RType(char* instruction);
-unsigned int IType(char* instruction);
-unsigned int JType(char* instruction);
-unsigned int SType(char* instruction);
+uint32_t RType(char* instruction);
+uint32_t IType(char* instruction);
+uint32_t JType(char* instruction);
+uint32_t SType(char* instruction);
 // Instruction assembly functions
 
-unsigned short int getLabelAddr(char* lbl);
-unsigned int getRegisterNum(char* str);
-unsigned int getImmediateVal(char* str);
+uint16_t getLabelAddr(char* lbl);
+uint8_t getRegisterNum(char* str);
+uint16_t getImmediateVal(char* str);
 bool fitsRegisterSyntax(char* str);
 bool fitsImmediateSyntax(char* str);
 bool containsOnlyNums(char* str);
 int countWords(char* str);
 char* getFirstWord(char* str);
 char* getWord(char* str, int w);
-char* getBinary(unsigned int n, int length);
-unsigned char binaryChar(unsigned int n);
+char* getBinary(uint32_t n, int length);
+unsigned char binaryChar(uint8_t n);
 bool isBlankLineOrComment(char* str);
 bool isLabel(char* str);
 // Assembler utility functions
@@ -241,11 +242,11 @@ void readInstructions(char* readfile, char* writefile) {
             if(instruction[lineBreakIndex] == '\n') instruction[lineBreakIndex] = '\0';
             // Remove any trailing line breaks from the instruction
 
-            unsigned int buffer = htonl(assembleInstruction(instruction));
+            uint32_t buffer = htonl(assembleInstruction(instruction));
 
             printf("%.8X\n", ntohl(buffer));
 
-            fwrite(&buffer, sizeof(unsigned int), 1, binFile);
+            fwrite(&buffer, sizeof(uint32_t), 1, binFile);
 
         }
 
@@ -259,10 +260,10 @@ void readInstructions(char* readfile, char* writefile) {
 
 }
 
-unsigned int assembleInstruction(char* instruction) {
+uint32_t assembleInstruction(char* instruction) {
     // Assembles all instruction types into their respective numeric values
 
-    unsigned int instructionNum = 0;
+    uint32_t instructionNum = 0;
 
     if((instructionNum = RType(instruction))) return instructionNum;
     else if((instructionNum = IType(instruction))) return instructionNum;
@@ -280,14 +281,14 @@ unsigned int assembleInstruction(char* instruction) {
 
 }
 
-unsigned int RType(char* instruction) {
+uint32_t RType(char* instruction) {
     // Assembles all basic R-type (register) instructions, excluding COPY, COMPARE, and NOT
     // Returns 0 if the given string is not a valid R-type instruction
 
-    unsigned int instructionNum = 0;
+    uint32_t instructionNum = 0;
 
     char* opcodeStr = getFirstWord(instruction);
-    unsigned int opcodeNum;
+    uint8_t opcodeNum;
 
     if(!strncmp(opcodeStr, "ADD", 4)) opcodeNum = OP_ADD;
     else if(!strncmp(opcodeStr, "SUBTRACT", 9)) opcodeNum = OP_SUBTRACT;
@@ -327,9 +328,9 @@ unsigned int RType(char* instruction) {
 
     }
 
-    unsigned int rDest = getRegisterNum(getWord(instruction, 1));
-    unsigned int rOp1 = getRegisterNum(getWord(instruction, 2));
-    unsigned int rOp2 = getRegisterNum(getWord(instruction, 3));
+    uint8_t rDest = getRegisterNum(getWord(instruction, 1));
+    uint8_t rOp1 = getRegisterNum(getWord(instruction, 2));
+    uint8_t rOp2 = getRegisterNum(getWord(instruction, 3));
 
     instructionNum += rDest << 20;
     instructionNum += rOp1 << 16;
@@ -339,14 +340,14 @@ unsigned int RType(char* instruction) {
 
 }
 
-unsigned int IType(char* instruction) {
+uint32_t IType(char* instruction) {
     // Assembles all basic I-type (immediate) instructions, excluding SET and COMPARE-IMM
     // Returns 0 if the given string is not a valid I-type instruction
 
-    unsigned int instructionNum = 0;
+    uint32_t instructionNum = 0;
 
     char* opcodeStr = getFirstWord(instruction);
-    unsigned int opcodeNum;
+    uint8_t opcodeNum;
 
     if(!strncmp(opcodeStr, "ADD-IMM", 8)) opcodeNum = OP_ADD_IMM;
     else if(!strncmp(opcodeStr, "SUBTRACT-IMM", 13)) opcodeNum = OP_SUBTRACT_IMM;
@@ -389,9 +390,9 @@ unsigned int IType(char* instruction) {
 
     }
 
-    unsigned int rDest = getRegisterNum(getWord(instruction, 1));
-    unsigned int rOp1 = getRegisterNum(getWord(instruction, 2));
-    unsigned int iOp2 = getImmediateVal(getWord(instruction, 3));
+    uint8_t rDest = getRegisterNum(getWord(instruction, 1));
+    uint8_t rOp1 = getRegisterNum(getWord(instruction, 2));
+    uint16_t iOp2 = getImmediateVal(getWord(instruction, 3));
 
     instructionNum += rDest << 20;
     instructionNum += rOp1 << 16;
@@ -405,10 +406,10 @@ unsigned int JType(char* instruction) {
     // Assembles all basic J-type (jump) instructions
     // Returns 0 if the given string is not a valid J-type instruction
 
-    unsigned int instructionNum = 0;
+    uint32_t instructionNum = 0;
 
     char* opcodeStr = getFirstWord(instruction);
-    unsigned int opcodeNum;
+    uint8_t opcodeNum;
 
     if(!strncmp(opcodeStr, "JUMP", 5)) opcodeNum = OP_JUMP;
     else if(!strncmp(opcodeStr, "JUMP-IF-ZERO", 13)) opcodeNum = OP_JUMP_IF_ZERO;
@@ -427,7 +428,7 @@ unsigned int JType(char* instruction) {
 
     }
 
-    unsigned short int destAddr = getLabelAddr(getWord(instruction, 1));
+    uint16_t destAddr = getLabelAddr(getWord(instruction, 1));
 
     instructionNum += destAddr;
 
@@ -435,25 +436,25 @@ unsigned int JType(char* instruction) {
 
 }
 
-unsigned int SType(char* instruction) {
+uint32_t SType(char* instruction) {
     // Assembles all non-standard instructions
     // Returns 0 if the given string is not a valid special instruction
 
-    unsigned int instructionNum = 0;
+    uint32_t instructionNum = 0;
 
     char* opcodeStr = getFirstWord(instruction);
-    unsigned int opcodeNum;
+    uint8_t opcodeNum;
 
     bool immediateMode = false;
     bool compareMode = false;
-    bool notMode = false;
+    bool rDestMode = false;
     
     if(!strncmp(opcodeStr, "HALT", 5)) return OP_HALT << 24;
     else if(!strncmp(opcodeStr, "SET", 4)) { opcodeNum = OP_SET; immediateMode = true; }
-    else if(!strncmp(opcodeStr, "COPY", 5)) opcodeNum = OP_COPY;
+    else if(!strncmp(opcodeStr, "COPY", 5)) { opcodeNum = OP_COPY; rDestMode = true; }
     else if(!strncmp(opcodeStr, "COMPARE", 8)) { opcodeNum = OP_COMPARE; compareMode = true; }
     else if(!strncmp(opcodeStr, "COMPARE-IMM", 12)) { opcodeNum = OP_COMPARE_IMM; immediateMode = true; compareMode = true;}
-    else if(!strncmp(opcodeStr, "NOT", 4)) { opcodeNum = OP_NOT; notMode = true; }
+    else if(!strncmp(opcodeStr, "NOT", 4)) { opcodeNum = OP_NOT; rDestMode = true; }
 
     else return 0;
 
@@ -481,20 +482,20 @@ unsigned int SType(char* instruction) {
 
     }
 
-    unsigned int reg = getRegisterNum(getWord(instruction, 1));
-    unsigned int op = immediateMode ? getImmediateVal(getWord(instruction, 2)) : getRegisterNum(getWord(instruction, 2));
+    uint8_t reg = getRegisterNum(getWord(instruction, 1));
+    uint16_t op = immediateMode ? getImmediateVal(getWord(instruction, 2)) : getRegisterNum(getWord(instruction, 2));
 
     if(compareMode) instructionNum += reg << 16;
     else instructionNum += reg << 20;
     if(immediateMode) instructionNum += op;
-    else if(notMode) instructionNum += op << 16;
+    else if(rDestMode) instructionNum += op << 16;
     else instructionNum += op << 12;
 
     return instructionNum;
 
 }
 
-unsigned short int getLabelAddr(char* lbl) {
+uint16_t getLabelAddr(char* lbl) {
     // Reads the symbol table and finds a corresponding label address, terminating the program if none is found
 
     for(int i = 0; i < SYMBOL_COUNT; i++) {
@@ -510,7 +511,7 @@ unsigned short int getLabelAddr(char* lbl) {
 
 }
 
-unsigned int getRegisterNum(char* str) {
+uint8_t getRegisterNum(char* str) {
     // Gets the register address from a given string
     // Assumes that string has already been validated as a proper register address argument
 
@@ -523,7 +524,7 @@ unsigned int getRegisterNum(char* str) {
 
 }
 
-unsigned int getImmediateVal(char* str) {
+uint16_t getImmediateVal(char* str) {
     // Gets the immediate value from a given string
     // Assumes that string has already been validated as a proper immediate argument
 
@@ -543,7 +544,7 @@ bool fitsRegisterSyntax(char* str) {
 
     if(!containsOnlyNums(str + 1)) return false;
 
-    unsigned int regNum = strtol(str + 1, NULL, 10);
+    uint8_t regNum = strtol(str + 1, NULL, 10);
     if(regNum > 15) return false;
 
     return true;
@@ -557,7 +558,7 @@ bool fitsImmediateSyntax(char* str) {
 
     if(!containsOnlyNums(str + 1)) return false;
 
-    unsigned int immVal = strtol(str + 1, NULL, 10);
+    uint16_t immVal = strtol(str + 1, NULL, 10);
     if(immVal > INT_LIMIT) return false;
 
     return true;
@@ -644,7 +645,7 @@ char* getWord(char* str, int w) {
 
 }
 
-char* getBinary(unsigned int n, int length) {
+char* getBinary(uint32_t n, int length) {
     // Returns a given int in binary format
 
     char* binary = malloc(n * sizeof(char));
@@ -655,7 +656,7 @@ char* getBinary(unsigned int n, int length) {
 
 }
 
-unsigned char binaryChar(unsigned int n) {
+unsigned char binaryChar(uint8_t n) {
     // Converts a 0 or 1 into '0' or '1' respectively
 
     if(n == 0) return '0';

@@ -287,6 +287,9 @@ char* RType(uint32_t instruction) {
 
     uint16_t amountOfRegOperands = 3;
     // Default number register operands is 3, COPY, COMPARE, and NOT only have 2
+    bool noDestRegAltMode = false;
+    // For COMPARE, there is no destination register, and the registers are placed in RO1 and RO2 instead
+    // This shifts the operand getter over 1
 
     switch(opcode) {
 
@@ -307,6 +310,7 @@ char* RType(uint32_t instruction) {
         case OP_COMPARE:
             opStr = "COMPARE";
             amountOfRegOperands = 2;
+            noDestRegAltMode = true;
             break;
 
         case OP_SHIFT_LEFT:
@@ -336,7 +340,7 @@ char* RType(uint32_t instruction) {
     if(amountOfRegOperands == 2) {
 
         snprintf(instructionStr, MAX_INSTRUCTION_LEN, "%s %s %s", opStr,
-        formatRegNum(getRegOperand(instruction, 1)), formatRegNum(getRegOperand(instruction, 2)));
+        formatRegNum(getRegOperand(instruction, 1 + noDestRegAltMode)), formatRegNum(getRegOperand(instruction, 2 + noDestRegAltMode)));
 
     } else if(amountOfRegOperands == 3) {
 

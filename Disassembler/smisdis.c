@@ -28,6 +28,7 @@ Program overview:
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <arpa/inet.h>
 
@@ -84,17 +85,17 @@ Program overview:
 typedef struct Label {
 
     char* labelName;
-    unsigned short int PCAddress;
+    uint16_t PCAddress;
 
 } Label;
 
 
 Label* SYMBOL_TABLE;
 // Stores all labels in the assembled file
-unsigned int SYMBOL_COUNT = 0;
+uint32_t SYMBOL_COUNT = 0;
 // Stores the amount of symbols to avoid iterating over unallocated pointers
 
-unsigned short int INSTRUCTION_ADDR = 0;
+uint16_t INSTRUCTION_ADDR = 0;
 // Instruction address is stored for symbol table usage
 
 
@@ -102,21 +103,21 @@ void createLabels(char* readfile);
 void readInstructions(char* readfile, char* writefile);
 // Program control functions
 
-char* disassembleInstruction(unsigned int instruction);
-char* RType(unsigned int instruction);
-char* IType(unsigned int instruction);
-char* JType(unsigned int instruction);
+char* disassembleInstruction(uint32_t instruction);
+char* RType(uint32_t instruction);
+char* IType(uint32_t instruction);
+char* JType(uint32_t instruction);
 // Instruction disassembly functions
 
-char* formatRegNum(unsigned short int regNum);
-char* formatImmediateVal(unsigned short int immVal);
-bool labelExists(unsigned short int addr);
-unsigned short int getOpcode(unsigned int instruction);
-unsigned short int getRegOperand(unsigned int instruction, unsigned short int opNum);
-unsigned short int getDestOrImmVal(unsigned int instruction);
-char* getLabelName(unsigned short int addr);
-char* generateLabelName(unsigned short int labelNum);
-bool isJump(unsigned int instruction);
+char* formatRegNum(uint16_t regNum);
+char* formatImmediateVal(uint16_t immVal);
+bool labelExists(uint16_t addr);
+uint8_t getOpcode(uint32_t instruction);
+uint8_t getRegOperand(uint32_t instruction, uint8_t opNum);
+uint16_t getDestOrImmVal(uint32_t instruction);
+char* getLabelName(uint16_t addr);
+char* generateLabelName(uint16_t labelNum);
+bool isJump(uint32_t instruction);
 // Disassembler utility functions
 
 bool isEmpty(char* str);
@@ -166,13 +167,13 @@ void createLabels(char* readfile) {
 
     }
 
-    unsigned int instruction;
+    uint32_t instruction;
     
     while(fread(&instruction, 4, 1, binFile)) {
 
         instruction = ntohl(instruction);
         
-        unsigned short int addr = getDestOrImmVal(instruction);
+        uint16_t addr = getDestOrImmVal(instruction);
 
         if(isJump(instruction)) {
         
@@ -220,7 +221,7 @@ void readInstructions(char* readfile, char* writefile) {
 
     }
 
-    unsigned int instruction;
+    uint32_t instruction;
     
     while(fread(&instruction, 4, 1, binFile)) {
 
@@ -251,7 +252,7 @@ void readInstructions(char* readfile, char* writefile) {
 
 }
 
-char* disassembleInstruction(unsigned int instruction) {
+char* disassembleInstruction(uint32_t instruction) {
     // Gets the corresponding line of code for a given instruction
 
     char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
@@ -274,17 +275,17 @@ char* disassembleInstruction(unsigned int instruction) {
 
 }
 
-char* RType(unsigned int instruction) {
+char* RType(uint32_t instruction) {
     // Converts an R-Type instruction to a string
     // If the given instruction is not a valid R-Type, returns an empty string
 
     char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
     *instructionStr = '\0';
 
-    unsigned short int opcode = getOpcode(instruction);
+    uint16_t opcode = getOpcode(instruction);
     char* opStr;
 
-    unsigned short int amountOfRegOperands = 3;
+    uint16_t amountOfRegOperands = 3;
     // Default number register operands is 3, COPY, COMPARE, and NOT only have 2
 
     switch(opcode) {
@@ -349,17 +350,17 @@ char* RType(unsigned int instruction) {
 
 }
 
-char* IType(unsigned int instruction) {
+char* IType(uint32_t instruction) {
     // Converts an I-Type instruction to a string
     // If the given instruction is not a valid I-Type, returns an empty string
 
     char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
     *instructionStr = '\0';
 
-    unsigned short int opcode = getOpcode(instruction);
+    uint16_t opcode = getOpcode(instruction);
     char* opStr;
 
-    unsigned short int amountOfRegOperands = 2;
+    uint16_t amountOfRegOperands = 2;
     // Default number register operands is 2, SET only has 1
 
     switch(opcode) {
@@ -428,14 +429,14 @@ char* IType(unsigned int instruction) {
 
 }
 
-char* JType(unsigned int instruction) {
+char* JType(uint32_t instruction) {
     // Converts a J-Type instruction to a string
     // If the given instruction is not a valid J-Type, returns an empty string
 
     char* instructionStr = malloc(MAX_INSTRUCTION_LEN * sizeof(char));
     *instructionStr = '\0';
 
-    unsigned short int opcode = getOpcode(instruction);
+    uint16_t opcode = getOpcode(instruction);
     char* opStr;
 
     switch(opcode) {
@@ -462,7 +463,7 @@ char* JType(unsigned int instruction) {
 
 }
 
-char* formatRegNum(unsigned short int regNum) {
+char* formatRegNum(uint16_t regNum) {
     // Translates a register from numerical form to string form
 
     char* regStr = malloc(4 * sizeof(char));
@@ -486,7 +487,7 @@ char* formatRegNum(unsigned short int regNum) {
 
 }
 
-char* formatImmediateVal(unsigned short int immVal) {
+char* formatImmediateVal(uint16_t immVal) {
     // Translates a numerical immediate value to a string starting with #
 
     char* immStr = malloc(7 * sizeof(char));
@@ -497,7 +498,7 @@ char* formatImmediateVal(unsigned short int immVal) {
 
 }
 
-bool labelExists(unsigned short int addr) {
+bool labelExists(uint16_t addr) {
     // Returns true if a label already exists in the symbol table
 
     for(int i = 0; i < SYMBOL_COUNT; i++) {
@@ -514,14 +515,14 @@ bool labelExists(unsigned short int addr) {
 
 }
 
-unsigned short int getOpcode(unsigned int instruction) {
+uint8_t getOpcode(uint32_t instruction) {
     // Gets the opcode of a given instruction
 
     return instruction >> 24;
 
 }
 
-unsigned short int getRegOperand(unsigned int instruction, unsigned short int opNum) {
+uint8_t getRegOperand(uint32_t instruction, uint8_t opNum) {
     // Gets the first operand of a given instruction
 
     opNum--;
@@ -538,14 +539,14 @@ unsigned short int getRegOperand(unsigned int instruction, unsigned short int op
 
 }
 
-unsigned short int getDestOrImmVal(unsigned int instruction) {
+uint16_t getDestOrImmVal(uint32_t instruction) {
     // Gets the destination address of a J-Type instruction or immediate value of an I-Type instruction
 
     return instruction & 0xFFFF;
 
 }
 
-char* getLabelName(unsigned short int addr) {
+char* getLabelName(uint16_t addr) {
     // Gets the label name associated with a given address
 
     for(int i = 0; i < SYMBOL_COUNT; i++) {
@@ -568,7 +569,7 @@ char* getLabelName(unsigned short int addr) {
 
 }
 
-char* generateLabelName(unsigned short int labelNum) {
+char* generateLabelName(uint16_t labelNum) {
     // Generates a generic label name with a given number
 
     char* name = malloc(14 * sizeof(char));
@@ -578,10 +579,10 @@ char* generateLabelName(unsigned short int labelNum) {
 
 }
 
-bool isJump(unsigned int instruction) {
+bool isJump(uint32_t instruction) {
     // Returns true if a given instruction is J-Type
 
-    unsigned short int opcode = instruction >> 24;
+    uint16_t opcode = instruction >> 24;
 
     return opcode >= OP_JUMP && opcode <= OP_JUMP_LINK;
 

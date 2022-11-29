@@ -119,12 +119,7 @@ uint8_t getRegisterNum(char* str);
 uint16_t getImmediateVal(char* str);
 bool fitsRegisterSyntax(char* str);
 bool fitsImmediateSyntax(char* str);
-bool containsOnlyNums(char* str);
-int countWords(char* str);
-char* getFirstWord(char* str);
-char* getWord(char* str, int w);
-char* getBinary(uint32_t n, int length);
-unsigned char binaryChar(uint8_t n);
+int countArgs(char* instruction);
 bool isBlankLineOrComment(char* str);
 bool isLabel(char* str);
 // Assembler utility functions
@@ -132,6 +127,11 @@ bool isLabel(char* str);
 void trimLineBreak(char* str);
 void trimLabelColon(char* str);
 void trimChar(char* str, char c);
+bool containsOnlyNums(char* str);
+char* getFirstWord(char* str);
+char* getWord(char* str, int w);
+char* getBinary(uint32_t n, int length);
+unsigned char binaryChar(uint8_t n);
 bool endsWith(char* str, char* substr);
 // General utility functions
 
@@ -308,7 +308,7 @@ uint32_t RType(char* instruction) {
 
     instructionNum += opcodeNum << 24;
 
-    if(countWords(instruction) != 4) {
+    if(countArgs(instruction) != 4) {
 
         printf("Incorrect number of arguments at line %i\n", LINE_NUMBER);
         printf("Instruction: %s\n", instruction);
@@ -369,7 +369,7 @@ uint32_t IType(char* instruction) {
 
     instructionNum += opcodeNum << 24;
 
-    if(countWords(instruction) != 4) {
+    if(countArgs(instruction) != 4) {
 
         printf("Incorrect number of arguments at line %i\n", LINE_NUMBER);
         printf("Instruction: %s\n", instruction);
@@ -420,7 +420,7 @@ unsigned int JType(char* instruction) {
 
     instructionNum += opcodeNum << 24;
 
-    if(countWords(instruction) != 2) {
+    if(countArgs(instruction) != 2) {
 
         printf("Incorrect number of arguments at line %i\n", LINE_NUMBER);
         printf("Instruction: %s\n", instruction);
@@ -460,7 +460,7 @@ uint32_t SType(char* instruction) {
 
     instructionNum += opcodeNum << 24;
 
-    if(countWords(instruction) != 3) {
+    if(countArgs(instruction) != 3) {
 
         printf("Incorrect number of arguments at line %i\n", LINE_NUMBER);
         printf("Instruction: %s\n", instruction);
@@ -565,108 +565,33 @@ bool fitsImmediateSyntax(char* str) {
 
 }
 
-bool containsOnlyNums(char* str) {
-    // Checks if a given string contains only numerical digit characters
+int countArgs(char* instruction) {
+    // Counts the number of space-separated arguments in a given instruction
 
-    while(*str) {
-
-        if(*str < '0' || *str > '9') return false;
-        str++;
-
-    }
-
-    return true;
-
-}
-
-int countWords(char* str) {
-    // Counts the number of space-separated words in a given string
-
-    // TODO: Make this function safer
+    char* originalInstruction = instruction;
 
     int count = 0;
+    bool lastCharWasSpace = false;
 
-    while(*str) {
+    while(*instruction) {
 
-        if(*str == ' ') count++;
-        str++;
+        if(!lastCharWasSpace && *instruction == ' ') { lastCharWasSpace = true; count++; }
+        else if(*instruction != ' ') lastCharWasSpace = false;
+        else {
+
+            printf("Incorrect spacing at line %i\n", LINE_NUMBER);
+            printf("Instruction: %s\n", originalInstruction);
+            exit(-1);
+
+        }
+
+        instruction++;
 
     }
 
     count++;
 
     return count;
-
-}
-
-char* getFirstWord(char* str) {
-    // Gets the first word (all characters before first space or null terminator) from a given string
-
-    int strlen = strnlen(str, MAX_STRING_LEN) + 1;
-
-    char* word = malloc(strlen * sizeof(char));
-
-    int i = 0;
-    
-    while(*str && *str != ' ') {
-
-        word[i] = *str;
-        str++;
-        i++;
-
-    }
-
-    word[i] = '\0';
-
-    int wordlen = strnlen(word, MAX_STRING_LEN) + 1;
-    word = realloc(word, wordlen * sizeof(char));
-
-    return word;
-
-}
-
-char* getWord(char* str, int w) {
-    // Gets an indexed word from a given string
-
-    if(w >= countWords(str)) {
-
-        printf("Internal error: cannot get word %i (indexed) from string with %i words\n", w, countWords(str));
-        exit(-2);
-
-    }
-
-    for(int i = 0; i < w; i++) {
-
-        str += strnlen(getFirstWord(str), MAX_STRING_LEN) + 1;
-
-    }
-
-    return getFirstWord(str);
-
-}
-
-char* getBinary(uint32_t n, int length) {
-    // Returns a given int in binary format
-
-    char* binary = malloc(n * sizeof(char));
-
-    for(int i = 0; i < length; i++) binary[length - (i + 1)] = binaryChar((n & 1 << i) >> i);
-
-    return binary;
-
-}
-
-unsigned char binaryChar(uint8_t n) {
-    // Converts a 0 or 1 into '0' or '1' respectively
-
-    if(n == 0) return '0';
-    else if(n == 1) return '1';
-    else {
-
-        printf("Internal error: cannot get binary char equivalent for digit %i\n", n);
-        exit(-2);
-
-    }
 
 }
 
@@ -717,6 +642,91 @@ void trimChar(char* str, char c) {
             return;
 
         }
+
+    }
+
+}
+
+bool containsOnlyNums(char* str) {
+    // Checks if a given string contains only numerical digit characters
+
+    while(*str) {
+
+        if(*str < '0' || *str > '9') return false;
+        str++;
+
+    }
+
+    return true;
+
+}
+
+char* getFirstWord(char* str) {
+    // Gets the first word (all characters before first space or null terminator) from a given string
+
+    int strlen = strnlen(str, MAX_STRING_LEN) + 1;
+
+    char* word = malloc(strlen * sizeof(char));
+
+    int i = 0;
+    
+    while(*str && *str != ' ') {
+
+        word[i] = *str;
+        str++;
+        i++;
+
+    }
+
+    word[i] = '\0';
+
+    int wordlen = strnlen(word, MAX_STRING_LEN) + 1;
+    word = realloc(word, wordlen * sizeof(char));
+
+    return word;
+
+}
+
+char* getWord(char* str, int w) {
+    // Gets an indexed word from a given string
+
+    if(w >= countArgs(str)) {
+
+        printf("Internal error: cannot get word %i (indexed) from string with %i words\n", w, countArgs(str));
+        exit(-2);
+
+    }
+
+    for(int i = 0; i < w; i++) {
+
+        str += strnlen(getFirstWord(str), MAX_STRING_LEN) + 1;
+
+    }
+
+    return getFirstWord(str);
+
+}
+
+char* getBinary(uint32_t n, int length) {
+    // Returns a given int in binary format
+
+    char* binary = malloc(n * sizeof(char));
+
+    for(int i = 0; i < length; i++) binary[length - (i + 1)] = binaryChar((n & 1 << i) >> i);
+
+    return binary;
+
+}
+
+unsigned char binaryChar(uint8_t n) {
+    // Converts a 0 or 1 into '0' or '1' respectively
+
+    if(n == 0) return '0';
+    else if(n == 1) return '1';
+    else {
+
+        printf("Internal error: cannot get binary char equivalent for digit %i\n", n);
+        exit(-2);
 
     }
 

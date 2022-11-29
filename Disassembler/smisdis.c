@@ -582,7 +582,7 @@ char* generateLabelName(uint16_t labelNum) {
 bool isJump(uint32_t instruction) {
     // Returns true if a given instruction is J-Type
 
-    uint16_t opcode = instruction >> 24;
+    uint8_t opcode = getOpcode(instruction);
 
     return opcode >= OP_JUMP && opcode <= OP_JUMP_LINK;
 

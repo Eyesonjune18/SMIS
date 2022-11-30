@@ -40,47 +40,51 @@ Program overview:
 #define MAX_STRING_LEN 500
 #define INT_LIMIT 65535
 
-#define OP_SET 1
-#define OP_COPY 2
+#define OP_SET              1
+#define OP_COPY             2
 
-#define OP_ADD 3
-#define OP_ADD_IMM 4
-#define OP_SUBTRACT 5
-#define OP_SUBTRACT_IMM 6
-#define OP_MULTIPLY 7
-#define OP_MULTIPLY_IMM 8
-#define OP_DIVIDE 9
-#define OP_DIVIDE_IMM 10
+#define OP_ADD              3
+#define OP_SUBTRACT         4
+#define OP_MULTIPLY         5
+#define OP_DIVIDE           6
+#define OP_MODULO           7
 
-#define OP_COMPARE 11
-#define OP_COMPARE_IMM 12
+#define OP_COMPARE          8
 
-#define OP_SHIFT_LEFT 13
-#define OP_SHIFT_LEFT_IMM 14
-#define OP_SHIFT_RIGHT 15
-#define OP_SHIFT_RIGHT_IMM 16
+#define OP_SHIFT_LEFT       9
+#define OP_SHIFT_RIGHT      10
 
-#define OP_AND 17
-#define OP_AND_IMM 18
-#define OP_OR 19
-#define OP_OR_IMM 20
-#define OP_XOR 21
-#define OP_XOR_IMM 22
-#define OP_NAND 23
-#define OP_NAND_IMM 24
-#define OP_NOR 25
-#define OP_NOR_IMM 26
-#define OP_NOT 27
+#define OP_AND              11
+#define OP_OR               12
+#define OP_XOR              13
+#define OP_NAND             14
+#define OP_NOR              15
+#define OP_NOT              16
 
-#define OP_LOAD 28
-#define OP_STORE 29
+#define OP_ADD_IMM          17
+#define OP_SUBTRACT_IMM     18
+#define OP_MULTIPLY_IMM     19
+#define OP_DIVIDE_IMM       20
+#define OP_MODULO_IMM       21
 
-#define OP_JUMP 30
-#define OP_JUMP_IF_ZERO 31
-#define OP_JUMP_IF_NOTZERO 32
-#define OP_JUMP_LINK 33
+#define OP_COMPARE_IMM      22
+#define OP_SHIFT_LEFT_IMM   23
+#define OP_SHIFT_RIGHT_IMM  24
+#define OP_AND_IMM          25
+#define OP_OR_IMM           26
+#define OP_XOR_IMM          27
+#define OP_NAND_IMM         28
+#define OP_NOR_IMM          29
 
-#define OP_HALT 34
+#define OP_LOAD             30
+#define OP_STORE            31
+
+#define OP_JUMP             32
+#define OP_JUMP_IF_ZERO     33
+#define OP_JUMP_IF_NOTZERO  34
+#define OP_JUMP_LINK        35
+
+#define OP_HALT             36
 // TODO: Possibly add exit code to HALT?
 
 
@@ -294,6 +298,7 @@ uint32_t RType(char* instruction) {
     else if(!strncmp(opcodeStr, "SUBTRACT", 9)) opcodeNum = OP_SUBTRACT;
     else if(!strncmp(opcodeStr, "MULTIPLY", 9)) opcodeNum = OP_MULTIPLY;
     else if(!strncmp(opcodeStr, "DIVIDE", 7)) opcodeNum = OP_DIVIDE;
+    else if(!strncmp(opcodeStr, "MODULO", 7)) opcodeNum = OP_MODULO;
 
     else if(!strncmp(opcodeStr, "SHIFT-LEFT", 11)) opcodeNum = OP_SHIFT_LEFT;
     else if(!strncmp(opcodeStr, "SHIFT-RIGHT", 12)) opcodeNum = OP_SHIFT_RIGHT;
@@ -353,6 +358,7 @@ uint32_t IType(char* instruction) {
     else if(!strncmp(opcodeStr, "SUBTRACT-IMM", 13)) opcodeNum = OP_SUBTRACT_IMM;
     else if(!strncmp(opcodeStr, "MULTIPLY-IMM", 13)) opcodeNum = OP_MULTIPLY_IMM;
     else if(!strncmp(opcodeStr, "DIVIDE-IMM", 11)) opcodeNum = OP_DIVIDE_IMM;
+    else if(!strncmp(opcodeStr, "MODULO-IMM", 11)) opcodeNum = OP_MODULO_IMM;
 
     else if(!strncmp(opcodeStr, "SHIFT-LEFT-IMM", 15)) opcodeNum = OP_SHIFT_LEFT_IMM;
     else if(!strncmp(opcodeStr, "SHIFT-RIGHT-IMM", 16)) opcodeNum = OP_SHIFT_RIGHT_IMM;

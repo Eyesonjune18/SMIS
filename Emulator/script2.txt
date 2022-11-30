@@ -1,0 +1,10 @@
+// Test script 2: finite loop
+
+SET R1 #5
+
+Loop:
+ADD-IMM R1 R1 #1
+COMPARE-IMM R1 #10
+JUMP-IF-NOTZERO Loop
+
+HALT

@@ -1,0 +1,9 @@
+// Test script 1: infinite loop
+
+SET R1 #5
+
+Loop:
+ADD-IMM R1 R1 #1
+JUMP Loop
+
+HALT

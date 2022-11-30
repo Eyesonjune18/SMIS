@@ -22,47 +22,51 @@
 #define ZF ZERO_FLAG
 #define SF SIGN_FLAG
 
-#define OP_SET 1
-#define OP_COPY 2
+#define OP_SET              1
+#define OP_COPY             2
 
-#define OP_ADD 3
-#define OP_ADD_IMM 4
-#define OP_SUBTRACT 5
-#define OP_SUBTRACT_IMM 6
-#define OP_MULTIPLY 7
-#define OP_MULTIPLY_IMM 8
-#define OP_DIVIDE 9
-#define OP_DIVIDE_IMM 10
+#define OP_ADD              3
+#define OP_SUBTRACT         4
+#define OP_MULTIPLY         5
+#define OP_DIVIDE           6
+#define OP_MODULO           7
 
-#define OP_COMPARE 11
-#define OP_COMPARE_IMM 12
+#define OP_COMPARE          8
 
-#define OP_SHIFT_LEFT 13
-#define OP_SHIFT_LEFT_IMM 14
-#define OP_SHIFT_RIGHT 15
-#define OP_SHIFT_RIGHT_IMM 16
+#define OP_SHIFT_LEFT       9
+#define OP_SHIFT_RIGHT      10
 
-#define OP_AND 17
-#define OP_AND_IMM 18
-#define OP_OR 19
-#define OP_OR_IMM 20
-#define OP_XOR 21
-#define OP_XOR_IMM 22
-#define OP_NAND 23
-#define OP_NAND_IMM 24
-#define OP_NOR 25
-#define OP_NOR_IMM 26
-#define OP_NOT 27
+#define OP_AND              11
+#define OP_OR               12
+#define OP_XOR              13
+#define OP_NAND             14
+#define OP_NOR              15
+#define OP_NOT              16
 
-#define OP_LOAD 28
-#define OP_STORE 29
+#define OP_ADD_IMM          17
+#define OP_SUBTRACT_IMM     18
+#define OP_MULTIPLY_IMM     19
+#define OP_DIVIDE_IMM       20
+#define OP_MODULO_IMM       21
 
-#define OP_JUMP 30
-#define OP_JUMP_IF_ZERO 31
-#define OP_JUMP_IF_NOTZERO 32
-#define OP_JUMP_LINK 33
+#define OP_COMPARE_IMM      22
+#define OP_SHIFT_LEFT_IMM   23
+#define OP_SHIFT_RIGHT_IMM  24
+#define OP_AND_IMM          25
+#define OP_OR_IMM           26
+#define OP_XOR_IMM          27
+#define OP_NAND_IMM         28
+#define OP_NOR_IMM          29
 
-#define OP_HALT 34
+#define OP_LOAD             30
+#define OP_STORE            31
+
+#define OP_JUMP             32
+#define OP_JUMP_IF_ZERO     33
+#define OP_JUMP_IF_NOTZERO  34
+#define OP_JUMP_LINK        35
+
+#define OP_HALT             36
 
 
 uint16_t MEMORY[0xFFFF];
@@ -84,39 +88,53 @@ void setFlags(uint16_t result);
 bool RType(uint32_t instruction);
 bool IType(uint32_t instruction);
 bool JType(uint32_t instruction);
+
 void SET(uint8_t rDest, uint16_t iVal);
 void COPY(uint8_t rDest, uint8_t rSrc);
+
 void ADD(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void ADD_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
 void SUBTRACT(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void SUBTRACT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
 void MULTIPLY(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void MULTIPLY_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
 void DIVIDE(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void DIVIDE_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+void MODULO(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
+
 void COMPARE(uint8_t rOp1, uint8_t rOp2);
-void COMPARE_IMM(uint8_t rOp1, uint16_t iOp2);
+
 void SHIFT_LEFT(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void SHIFT_LEFT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
 void SHIFT_RIGHT(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void SHIFT_RIGHT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+
 void AND(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void AND_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
 void OR(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void OR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
 void XOR(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void XOR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
 void NAND(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void NAND_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
 void NOR(uint8_t rDest, uint8_t rOp1, uint8_t rOp2);
-void NOR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
 void NOT(uint8_t rDest, uint8_t rOp);
+
+void ADD_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+void SUBTRACT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+void MULTIPLY_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+void DIVIDE_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+void MODULO_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+
+void COMPARE_IMM(uint8_t rOp1, uint16_t iOp2);
+
+void SHIFT_LEFT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+void SHIFT_RIGHT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+
+void AND_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+void OR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+void XOR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+void NAND_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+void NOR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2);
+
 void LOAD(uint8_t rDest, uint8_t rBase, uint16_t iOffset);
 void STORE(uint8_t rSrc, uint8_t rBase, uint16_t iOffset);
+
 void JUMP(uint16_t destAddr);
 void JUMP_IF_ZERO(uint16_t destAddr);
 void JUMP_IF_NOTZERO(uint16_t destAddr);
 void JUMP_LINK(uint16_t destAddr);
+
 void HALT();
 
 uint8_t getOpcode(uint32_t instruction);
@@ -253,6 +271,7 @@ bool RType(uint32_t instruction) {
         case OP_SUBTRACT: SUBTRACT(rDest, rOp1, rOp2); break;
         case OP_MULTIPLY: MULTIPLY(rDest, rOp1, rOp2); break;
         case OP_DIVIDE: DIVIDE(rDest, rOp1, rOp2); break;
+        case OP_MODULO: MODULO(rDest, rOp1, rOp2); break;
 
         case OP_COMPARE: COMPARE(rOp1, rOp2); break;
 
@@ -292,12 +311,13 @@ bool IType(uint32_t instruction) {
         case OP_SUBTRACT_IMM: SUBTRACT_IMM(rDest, rOp1, iOp2); break;
         case OP_MULTIPLY_IMM: MULTIPLY_IMM(rDest, rOp1, iOp2); break;
         case OP_DIVIDE_IMM: DIVIDE_IMM(rDest, rOp1, iOp2); break;
+        case OP_MODULO_IMM: MODULO_IMM(rDest, rOp1, iOp2); break;
 
         case OP_COMPARE_IMM: COMPARE_IMM(rOp1, iOp2); break;
 
         case OP_SHIFT_LEFT_IMM: SHIFT_LEFT_IMM(rDest, rOp1, iOp2); break;
         case OP_SHIFT_RIGHT_IMM: SHIFT_RIGHT_IMM(rDest, rOp1, iOp2); break;
-            
+
         case OP_AND_IMM: AND_IMM(rDest, rOp1, iOp2); break;
         case OP_OR_IMM: OR_IMM(rDest, rOp1, iOp2); break;
         case OP_XOR_IMM: XOR_IMM(rDest, rOp1, iOp2); break;
@@ -369,17 +389,6 @@ void ADD(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
 
 }
 
-void ADD_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes an ADD-IMM instruction
-
-    REG[rDest] = REG[rOp1] + iOp2;
-
-    setFlags(REG[rDest]);
-
-    printf("ADD-IMM\n");
-
-}
-
 void SUBTRACT(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
     // Executes a SUBTRACT instruction
 
@@ -388,17 +397,6 @@ void SUBTRACT(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
     setFlags(REG[rDest]);
 
     printf("SUBTRACT\n");
-
-}
-
-void SUBTRACT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes a SUBTRACT-IMM instruction
-
-    REG[rDest] = REG[rOp1] - iOp2;
-
-    setFlags(REG[rDest]);
-
-    printf("SUBTRACT-IMM\n");
 
 }
 
@@ -413,17 +411,6 @@ void MULTIPLY(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
 
 }
 
-void MULTIPLY_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes a MULTIPLY-IMM instruction
-
-    REG[rDest] = REG[rOp1] * iOp2;
-
-    setFlags(REG[rDest]);
-
-    printf("MULTIPLY-IMM\n");
-
-}
-
 void DIVIDE(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
     // Executes a DIVIDE instruction
 
@@ -435,14 +422,14 @@ void DIVIDE(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
 
 }
 
-void DIVIDE_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes a DIVIDE-IMM instruction
+void MODULO(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
+    // Executes a MODULO instruction
 
-    REG[rDest] = REG[rOp1] / iOp2;
+    REG[rDest] = REG[rOp1] % REG[rOp2];
 
     setFlags(REG[rDest]);
 
-    printf("DIVIDE-IMM\n");
+    printf("MODULO\n");
 
 }
 
@@ -457,17 +444,6 @@ void COMPARE(uint8_t rOp1, uint8_t rOp2) {
 
 }
 
-void COMPARE_IMM(uint8_t rOp1, uint16_t iOp2) {
-    // Executes a COMPARE-IMM instruction
-
-    uint16_t throwawayVal = REG[rOp1] - iOp2;
-
-    setFlags(throwawayVal);
-
-    printf("COMPARE-IMM\n");
-
-}
-
 void SHIFT_LEFT(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
     // Executes a SHIFT-LEFT instruction
 
@@ -476,17 +452,6 @@ void SHIFT_LEFT(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
     setFlags(REG[rDest]);
 
     printf("SHIFT-LEFT\n");
-
-}
-
-void SHIFT_LEFT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes a SHIFT-LEFT-IMM instruction
-
-    REG[rDest] = REG[rOp1] << iOp2;
-
-    setFlags(REG[rDest]);
-
-    printf("SHIFT-LEFT-IMM\n");
 
 }
 
@@ -501,17 +466,6 @@ void SHIFT_RIGHT(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
 
 }
 
-void SHIFT_RIGHT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes a SHIFT-RIGHT-IMM instruction
-
-    REG[rDest] = REG[rOp1] >> iOp2;
-
-    setFlags(REG[rDest]);
-
-    printf("SHIFT-RIGHT-IMM\n");
-
-}
-
 void AND(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
     // Executes an AND instruction
 
@@ -520,17 +474,6 @@ void AND(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
     setFlags(REG[rDest]);
 
     printf("AND\n");
-
-}
-
-void AND_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes an AND-IMM instruction
-
-    REG[rDest] = REG[rOp1] & iOp2;
-
-    setFlags(REG[rDest]);
-
-    printf("AND-IMM\n");
 
 }
 
@@ -545,17 +488,6 @@ void OR(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
 
 }
 
-void OR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes an OR-IMM instruction
-
-    REG[rDest] = REG[rOp1] | iOp2;
-
-    setFlags(REG[rDest]);
-
-    printf("OR-IMM\n");
-
-}
-
 void XOR(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
     // Executes an XOR instruction
 
@@ -564,17 +496,6 @@ void XOR(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
     setFlags(REG[rDest]);
 
     printf("XOR\n");
-
-}
-
-void XOR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes an XOR-IMM instruction
-
-    REG[rDest] = REG[rOp1] ^ iOp2;
-
-    setFlags(REG[rDest]);
-
-    printf("XOR-IMM\n");
 
 }
 
@@ -589,17 +510,6 @@ void NAND(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
 
 }
 
-void NAND_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes a NAND-IMM instruction
-
-    REG[rDest] = ~(REG[rOp1] & iOp2);
-
-    setFlags(REG[rDest]);
-
-    printf("NAND-IMM\n");
-
-}
-
 void NOR(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
     // Executes a NOR instruction
 
@@ -611,17 +521,6 @@ void NOR(uint8_t rDest, uint8_t rOp1, uint8_t rOp2) {
 
 }
 
-void NOR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
-    // Executes A NOR-IMM instruction
-
-    REG[rDest] = ~(REG[rOp1] | iOp2);
-
-    setFlags(REG[rDest]);
-
-    printf("NOR-IMM\n");
-
-}
-
 void NOT(uint8_t rDest, uint8_t rOp) {
     // Executes a NOT instruction
 
@@ -630,6 +529,149 @@ void NOT(uint8_t rDest, uint8_t rOp) {
     setFlags(REG[rDest]);
 
     printf("NOT\n");
+
+}
+
+void ADD_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes an ADD-IMM instruction
+
+    REG[rDest] = REG[rOp1] + iOp2;
+
+    setFlags(REG[rDest]);
+
+    printf("ADD-IMM result %i\n", REG[rDest]);
+
+}
+
+void SUBTRACT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes a SUBTRACT-IMM instruction
+
+    REG[rDest] = REG[rOp1] - iOp2;
+
+    setFlags(REG[rDest]);
+
+    printf("SUBTRACT-IMM\n");
+
+}
+
+void MULTIPLY_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes a MULTIPLY-IMM instruction
+
+    REG[rDest] = REG[rOp1] * iOp2;
+
+    setFlags(REG[rDest]);
+
+    printf("MULTIPLY-IMM\n");
+
+}
+
+void DIVIDE_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes a DIVIDE-IMM instruction
+
+    REG[rDest] = REG[rOp1] / iOp2;
+
+    setFlags(REG[rDest]);
+
+    printf("DIVIDE-IMM\n");
+
+}
+
+void MODULO_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes a MODULO-IMM instruction
+
+    REG[rDest] = REG[rOp1] % iOp2;
+
+    setFlags(REG[rDest]);
+
+    printf("MODULO-IMM\n");
+
+}
+
+void COMPARE_IMM(uint8_t rOp1, uint16_t iOp2) {
+    // Executes a COMPARE-IMM instruction
+
+    uint16_t throwawayVal = REG[rOp1] - iOp2;
+
+    setFlags(throwawayVal);
+
+    printf("COMPARE-IMM\n");
+
+}
+
+void SHIFT_LEFT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes a SHIFT-LEFT-IMM instruction
+
+    REG[rDest] = REG[rOp1] << iOp2;
+
+    setFlags(REG[rDest]);
+
+    printf("SHIFT-LEFT-IMM\n");
+
+}
+
+void SHIFT_RIGHT_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes a SHIFT-RIGHT-IMM instruction
+
+    REG[rDest] = REG[rOp1] >> iOp2;
+
+    setFlags(REG[rDest]);
+
+    printf("SHIFT-RIGHT-IMM\n");
+
+}
+
+void AND_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes an AND-IMM instruction
+
+    REG[rDest] = REG[rOp1] & iOp2;
+
+    setFlags(REG[rDest]);
+
+    printf("AND-IMM\n");
+
+}
+
+void OR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes an OR-IMM instruction
+
+    REG[rDest] = REG[rOp1] | iOp2;
+
+    setFlags(REG[rDest]);
+
+    printf("OR-IMM\n");
+
+}
+
+void XOR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes an XOR-IMM instruction
+
+    REG[rDest] = REG[rOp1] ^ iOp2;
+
+    setFlags(REG[rDest]);
+
+    printf("XOR-IMM\n");
+
+}
+
+void NAND_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes a NAND-IMM instruction
+
+    REG[rDest] = ~(REG[rOp1] & iOp2);
+
+    setFlags(REG[rDest]);
+
+    printf("NAND-IMM\n");
+
+}
+
+void NOR_IMM(uint8_t rDest, uint8_t rOp1, uint16_t iOp2) {
+    // Executes A NOR-IMM instruction
+
+    REG[rDest] = ~(REG[rOp1] | iOp2);
+
+    setFlags(REG[rDest]);
+
+    printf("NOR-IMM\n");
 
 }
 

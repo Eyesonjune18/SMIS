@@ -266,7 +266,7 @@ char* disassembleInstruction(uint32_t instruction) {
     else if(!isEmpty(jStr)) instructionStr = jStr;
     else {
 
-        printf("Instruction %i did not match any known opcodes\n", INSTRUCTION_NUMBER);
+        printf("Unknown instruction 0x%.8X at instruction number %i\n", instruction, INSTRUCTION_NUMBER);
         exit(-1);
 
     }
@@ -568,7 +568,7 @@ char* getLabelName(uint16_t addr) {
 
     }
 
-    printf("Internal error: cannot find label for address %.4X in symbol table at instruction %i\n", addr, INSTRUCTION_NUMBER);
+    printf("Internal error: cannot find label for address 0x%.4X in symbol table at instruction %i\n", addr, INSTRUCTION_NUMBER);
     exit(-2);
 
 }

@@ -407,10 +407,6 @@ char* IType(uint32_t instruction) {
         case OP_STORE:
             opStr = "STORE"; break;
 
-        case OP_HALT:
-            instructionStr = "HALT";
-            return instructionStr;
-
         default: return instructionStr;
 
     }
@@ -453,6 +449,10 @@ char* JType(uint32_t instruction) {
             opStr = "JUMP-IF-NOTZERO"; break;
         case OP_JUMP_LINK:
             opStr = "JUMP-LINK"; break;
+
+        case OP_HALT:
+            instructionStr = "HALT";
+            return instructionStr;
 
         default: return instructionStr;
 

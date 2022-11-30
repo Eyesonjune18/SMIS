@@ -1,13 +1,13 @@
-#**SMIS ASM Project**
+# **SMIS ASM Project**
 
 SMIS is a project I'm working on that I hope can serve as a learning tool both for me and for others.
 
 
-###What does SMIS mean, anyway?
+### What does SMIS mean, anyway?
 Well, it is short for "Simple Monolength Instruction Set," and it was designed from the ground up to be a pseudo-architecture/assembly language for beginners in hardware/software interface studies.
 
 
-###How does it accomplish this goal?
+### How does it accomplish this goal?
 
 - It avoids most of the complexity that comes with implementing the x86 instruction set (because of both the number of instructions, and the complex nature of each)
 - It avoids the occasionally cryptic names of the ARM instruction set (LDURSB etc.), and provides a larger number of basic instructions so as to avoid the need for highly-verbose code
@@ -21,7 +21,7 @@ For now the SMIS toolsuite includes an assembler and a disassembler for SMIS ASM
 and converts it into machine code, a disassembler takes machine code and converts it back to ASM, an an emulator runs the code through a translation layer.
 
 
-##**Getting Started**
+## **Getting Started**
 
 To start writing in SMIS, simply download the assembler (smisasm) and disassembler (smisdis) executables from the repo.
 

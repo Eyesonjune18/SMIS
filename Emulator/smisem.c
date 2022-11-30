@@ -83,6 +83,8 @@ void loadProgram(char* binfile);
 void executeProgram();
 void executeInstruction();
 void grabNextInstruction();
+// Program control functions
+
 void setFlags(uint16_t result);
 
 bool RType(uint32_t instruction);
@@ -136,14 +138,17 @@ void JUMP_IF_NOTZERO(uint16_t destAddr);
 void JUMP_LINK(uint16_t destAddr);
 
 void HALT();
+// Instruction execution functions
 
 uint8_t getOpcode(uint32_t instruction);
 uint16_t getInstructionHalf1(uint32_t instruction);
 uint16_t getInstructionHalf2(uint32_t instruction);
 uint8_t getRegOperand(uint32_t instruction, uint8_t opNum);
 uint16_t getDestOrImmVal(uint32_t instruction);
+// Emulator utility functions
 
 bool endsWith(char* str, char* substr);
+// General utility functions
 
 
 int main(int argc, char** argv) {
@@ -212,6 +217,7 @@ void executeProgram() {
 
         grabNextInstruction();
         PC += 2;
+        // PC is incremented prior to executing instruction so it does not interfere with J-Type instructions
         executeInstruction();
 
         RZR = 0x0000;

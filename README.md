@@ -27,6 +27,8 @@ To start writing in SMIS, simply download the assembler (smisasm) and disassembl
 
 Then, once you write your code in a .txt file, you can assemble it into a .bin file by typing "./smisasm \<your asm file.txt\> \<target output file.bin\>". This should work in most Linux distributions that use Bash.
 
+The assembled code can be run through the emulator using "./smisem \<your executable.bin\>".
+
 If you want to disassemble a file, use "./smisdis \<your executable.bin\> \<target output file.txt\>".
 
 

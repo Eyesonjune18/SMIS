@@ -91,7 +91,7 @@ Program overview:
 typedef struct Label {
 
     char* labelName;
-    unsigned short int PCAddress;
+    uint16_t PCAddress;
 
 } Label;
 
@@ -101,7 +101,7 @@ Label* SYMBOL_TABLE;
 uint32_t SYMBOL_COUNT = 0;
 // Stores the amount of symbols to avoid iterating over unallocated pointers
 
-unsigned short int INSTRUCTION_ADDR = 0;
+uint16_t INSTRUCTION_ADDR = 0;
 // Instruction address is stored for symbol table usage
 uint32_t LINE_NUMBER = 1;
 // Line number is stored in order to give more descriptive error messages
@@ -123,20 +123,20 @@ uint8_t getRegisterNum(char* str);
 uint16_t getImmediateVal(char* str);
 bool fitsRegisterSyntax(char* str);
 bool fitsImmediateSyntax(char* str);
-int countArgs(char* instruction);
-bool isBlankLineOrComment(char* str);
-bool isLabel(char* str);
+int countArgs(char* instruction);//
+bool isBlankLineOrComment(char* str);//
+bool isLabel(char* str);//
 // Assembler utility functions
 
-void trimLineBreak(char* str);
-void trimLabelColon(char* str);
-void trimChar(char* str, char c);
-bool containsOnlyNums(char* str);
-char* getFirstWord(char* str);
-char* getWord(char* str, int w);
+void trimLineBreak(char* str);//
+void trimLabelColon(char* str);//
+void trimChar(char* str, char c);//
+bool containsOnlyNums(char* str);//
+char* getFirstWord(char* str);//
+char* getWord(char* str, int w);//
 char* getBinary(uint32_t n, int length);
 unsigned char binaryChar(uint8_t n);
-bool endsWith(char* str, char* substr);
+bool endsWith(char* str, char* substr);//
 // General utility functions
 
 
@@ -408,7 +408,7 @@ uint32_t IType(char* instruction) {
 
 }
 
-unsigned int JType(char* instruction) {
+uint32_t JType(char* instruction) {
     // Assembles all basic J-type (jump) instructions
     // Returns 0 if the given string is not a valid J-type instruction
 
